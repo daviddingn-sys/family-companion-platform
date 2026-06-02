@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  abnormalEvents,
   bloodPressureRecords,
   elders,
   families,
@@ -16,6 +17,7 @@ export const profileRelations = relations(profiles, ({ many }) => ({
   bloodPressureRecords: many(bloodPressureRecords),
   medications: many(medications),
   reminders: many(reminders),
+  abnormalEvents: many(abnormalEvents),
 }));
 
 export const familyRelations = relations(families, ({ one, many }) => ({
@@ -28,6 +30,7 @@ export const familyRelations = relations(families, ({ one, many }) => ({
   bloodPressureRecords: many(bloodPressureRecords),
   medications: many(medications),
   reminders: many(reminders),
+  abnormalEvents: many(abnormalEvents),
 }));
 
 export const familyMemberRelations = relations(familyMembers, ({ one }) => ({
@@ -53,9 +56,10 @@ export const elderRelations = relations(elders, ({ one, many }) => ({
   bloodPressureRecords: many(bloodPressureRecords),
   medications: many(medications),
   reminders: many(reminders),
+  abnormalEvents: many(abnormalEvents),
 }));
 
-export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ one }) => ({
+export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ one, many }) => ({
   family: one(families, {
     fields: [bloodPressureRecords.familyId],
     references: [families.id],
@@ -68,6 +72,7 @@ export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ o
     fields: [bloodPressureRecords.recordedBy],
     references: [profiles.id],
   }),
+  abnormalEvents: many(abnormalEvents),
 }));
 
 export const medicationRelations = relations(medications, ({ one }) => ({
@@ -97,5 +102,24 @@ export const reminderRelations = relations(reminders, ({ one }) => ({
   creator: one(profiles, {
     fields: [reminders.createdBy],
     references: [profiles.id],
+  }),
+}));
+
+export const abnormalEventRelations = relations(abnormalEvents, ({ one }) => ({
+  family: one(families, {
+    fields: [abnormalEvents.familyId],
+    references: [families.id],
+  }),
+  elder: one(elders, {
+    fields: [abnormalEvents.elderId],
+    references: [elders.id],
+  }),
+  creator: one(profiles, {
+    fields: [abnormalEvents.createdBy],
+    references: [profiles.id],
+  }),
+  relatedBloodPressureRecord: one(bloodPressureRecords, {
+    fields: [abnormalEvents.relatedBloodPressureRecordId],
+    references: [bloodPressureRecords.id],
   }),
 }));
