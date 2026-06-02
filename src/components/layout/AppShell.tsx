@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
             <div className="mt-4 rounded-md border bg-card p-3 text-xs text-muted-foreground">
               <UserRoundCog className="mb-2 size-4 text-primary" />
-              第一阶段聚焦账户、家庭、成员和老人档案。
+              当前聚焦家庭档案、健康数据和基础报告。
             </div>
           </nav>
         </aside>
