@@ -6,6 +6,7 @@ import {
   familyMembers,
   medications,
   profiles,
+  reminders,
 } from "./schema";
 
 export const profileRelations = relations(profiles, ({ many }) => ({
@@ -14,6 +15,7 @@ export const profileRelations = relations(profiles, ({ many }) => ({
   createdElders: many(elders),
   bloodPressureRecords: many(bloodPressureRecords),
   medications: many(medications),
+  reminders: many(reminders),
 }));
 
 export const familyRelations = relations(families, ({ one, many }) => ({
@@ -25,6 +27,7 @@ export const familyRelations = relations(families, ({ one, many }) => ({
   elders: many(elders),
   bloodPressureRecords: many(bloodPressureRecords),
   medications: many(medications),
+  reminders: many(reminders),
 }));
 
 export const familyMemberRelations = relations(familyMembers, ({ one }) => ({
@@ -49,6 +52,7 @@ export const elderRelations = relations(elders, ({ one, many }) => ({
   }),
   bloodPressureRecords: many(bloodPressureRecords),
   medications: many(medications),
+  reminders: many(reminders),
 }));
 
 export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ one }) => ({
@@ -77,6 +81,21 @@ export const medicationRelations = relations(medications, ({ one }) => ({
   }),
   creator: one(profiles, {
     fields: [medications.createdBy],
+    references: [profiles.id],
+  }),
+}));
+
+export const reminderRelations = relations(reminders, ({ one }) => ({
+  family: one(families, {
+    fields: [reminders.familyId],
+    references: [families.id],
+  }),
+  elder: one(elders, {
+    fields: [reminders.elderId],
+    references: [elders.id],
+  }),
+  creator: one(profiles, {
+    fields: [reminders.createdBy],
     references: [profiles.id],
   }),
 }));
