@@ -1,0 +1,118 @@
+"use client";
+
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type Member = {
+  id: string;
+  role: string;
+  relationship: string | null;
+  status: string;
+  invited_email: string | null;
+  invited_phone: string | null;
+  profiles: { display_name: string | null; phone: string | null } | null;
+};
+
+export function MembersClient({ familyId }: { familyId: string }) {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [relationship, setRelationship] = useState("");
+  const [role, setRole] = useState("member");
+  const [error, setError] = useState("");
+
+  const load = useCallback(() => {
+    fetch(`/api/families/${familyId}/members`)
+      .then((response) => response.json())
+      .then((result) => setMembers(result.members ?? []));
+  }, [familyId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function invite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    const response = await fetch(`/api/families/${familyId}/members`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, phone, relationship, role }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setError(result.error ?? "邀请失败");
+      return;
+    }
+    setEmail("");
+    setPhone("");
+    setRelationship("");
+    setRole("member");
+    load();
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold">家庭成员</h1>
+        <p className="text-sm text-muted-foreground">第一阶段支持成员列表和邀请占位，后续接入邀请确认流程。</p>
+      </div>
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle>邀请成员</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="grid gap-3 md:grid-cols-4" onSubmit={invite}>
+            <div className="space-y-2">
+              <Label>邮箱</Label>
+              <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>手机号</Label>
+              <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="可选" />
+            </div>
+            <div className="space-y-2">
+              <Label>关系</Label>
+              <Input value={relationship} onChange={(event) => setRelationship(event.target.value)} placeholder="子女/配偶" />
+            </div>
+            <div className="space-y-2">
+              <Label>角色</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">管理员</SelectItem>
+                  <SelectItem value="member">成员</SelectItem>
+                  <SelectItem value="viewer">只读</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {error && <p className="md:col-span-4 text-sm text-destructive">{error}</p>}
+            <Button className="md:col-span-4" type="submit">添加邀请</Button>
+          </form>
+        </CardContent>
+      </Card>
+      <div className="grid gap-3">
+        {members.map((member) => (
+          <Card key={member.id} className="rounded-lg">
+            <CardContent className="flex items-center justify-between gap-3 py-4">
+              <div>
+                <p className="font-medium">
+                  {member.profiles?.display_name ?? member.invited_email ?? member.invited_phone ?? "未命名成员"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {member.relationship || "未填写关系"} · {member.role} · {member.status}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
