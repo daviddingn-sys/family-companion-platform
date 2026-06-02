@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from "next/server";
+import * as XLSX from "xlsx";
+import { parseBloodPressureRows } from "@/lib/blood-pressure-import";
+import { getRouteUser, requireFamilyRole } from "@/lib/permissions";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ familyId: string; elderId: string }> },
+) {
+  const { familyId, elderId } = await params;
+  const user = await getRouteUser();
+  if (user instanceof NextResponse) return user;
+
+  const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
+  if (membership instanceof NextResponse) return membership;
+
+  const formData = await request.formData();
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return NextResponse.json({ error: "请上传文件" }, { status: 400 });
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+  const parsedRows = parseBloodPressureRows(rows);
+  const validRows = parsedRows.filter((row) => row.valid && row.data);
+  const invalidRows = parsedRows.filter((row) => !row.valid);
+
+  const admin = createSupabaseAdminClient();
+  const inserts = validRows.map((row) => ({
+    family_id: familyId,
+    elder_id: elderId,
+    recorded_by: user.id,
+    measured_at: row.data!.measuredAt,
+    period: row.data!.period,
+    systolic: row.data!.systolic,
+    diastolic: row.data!.diastolic,
+    pulse: row.data!.pulse,
+    source: "excel",
+    status: "confirmed",
+    note: row.data!.note || null,
+  }));
+
+  let inserted = 0;
+  let insertError: string | null = null;
+  if (inserts.length > 0) {
+    const { data, error } = await admin
+      .from("blood_pressure_records")
+      .insert(inserts)
+      .select("id");
+    inserted = data?.length ?? 0;
+    insertError = error?.message ?? null;
+  }
+
+  return NextResponse.json({
+    total: rows.length,
+    parsed: parsedRows.length,
+    inserted,
+    failed: invalidRows.length,
+    insertError,
+    errors: invalidRows.slice(0, 20).map((row) => `第${row.rowNumber}行：${row.error}`),
+  });
+}
