@@ -2,6 +2,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -188,5 +189,32 @@ export const abnormalEvents = pgTable(
     index("abnormal_events_occurred_at_idx").on(table.occurredAt),
     index("abnormal_events_status_idx").on(table.status),
     index("abnormal_events_severity_idx").on(table.severity),
+  ],
+);
+
+export const healthReports = pgTable(
+  "health_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    elderId: uuid("elder_id").notNull().references(() => elders.id, {
+      onDelete: "cascade",
+    }),
+    periodType: text("period_type").notNull(),
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    stats: jsonb("stats").notNull(),
+    generatedBy: uuid("generated_by").notNull().references(() => profiles.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("health_reports_family_id_idx").on(table.familyId),
+    index("health_reports_elder_id_idx").on(table.elderId),
+    index("health_reports_period_idx").on(table.periodType, table.periodStart, table.periodEnd),
   ],
 );
