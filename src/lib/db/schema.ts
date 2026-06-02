@@ -157,3 +157,36 @@ export const reminders = pgTable(
     index("reminders_status_idx").on(table.status),
   ],
 );
+
+export const abnormalEvents = pgTable(
+  "abnormal_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    elderId: uuid("elder_id").notNull().references(() => elders.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    eventType: text("event_type").notNull().default("other"),
+    severity: text("severity").notNull().default("medium"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    status: text("status").notNull().default("open"),
+    description: text("description"),
+    relatedBloodPressureRecordId: uuid("related_blood_pressure_record_id").references(
+      () => bloodPressureRecords.id,
+      { onDelete: "set null" },
+    ),
+    createdBy: uuid("created_by").notNull().references(() => profiles.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("abnormal_events_family_id_idx").on(table.familyId),
+    index("abnormal_events_elder_id_idx").on(table.elderId),
+    index("abnormal_events_occurred_at_idx").on(table.occurredAt),
+    index("abnormal_events_status_idx").on(table.status),
+    index("abnormal_events_severity_idx").on(table.severity),
+  ],
+);
