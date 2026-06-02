@@ -15,6 +15,13 @@
       "when": 1780380869636,
       "tag": "0001_breezy_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780385593740,
+      "tag": "0002_amused_thena",
+      "breakpoints": true
     }
   ]
 }
