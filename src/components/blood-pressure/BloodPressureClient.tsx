@@ -82,6 +82,7 @@ export function BloodPressureClient({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
   const [importMessage, setImportMessage] = useState("");
@@ -118,6 +119,7 @@ export function BloodPressureClient({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setSaveMessage("");
     setSaving(true);
 
     const response = await fetch(endpoint, {
@@ -141,6 +143,12 @@ export function BloodPressureClient({
     if (!response.ok) {
       setError(result.error ?? "保存失败");
       return;
+    }
+
+    if (result.abnormalEventsCreated > 0) {
+      setSaveMessage(`已保存记录，并自动生成 ${result.abnormalEventsCreated} 条异常记录。`);
+    } else {
+      setSaveMessage("已保存记录。");
     }
 
     setForm({
@@ -247,7 +255,9 @@ export function BloodPressureClient({
       return;
     }
 
-    setImportMessage(`导入完成：成功 ${result.inserted} 条，失败 ${result.failed} 条`);
+    setImportMessage(
+      `导入完成：成功 ${result.inserted} 条，失败 ${result.failed} 条，自动生成异常记录 ${result.abnormalEventsCreated ?? 0} 条`,
+    );
     load();
   }
 
@@ -498,6 +508,7 @@ export function BloodPressureClient({
               </p>
             </div>
             {error && <p className="text-sm text-destructive md:col-span-6">{error}</p>}
+            {saveMessage && <p className="text-sm text-muted-foreground md:col-span-6">{saveMessage}</p>}
             <Button className="md:col-span-6" type="submit" disabled={saving}>
               {saving ? "保存中..." : "保存记录"}
             </Button>
