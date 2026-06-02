@@ -129,3 +129,31 @@ export const medications = pgTable(
     index("medications_status_idx").on(table.status),
   ],
 );
+
+export const reminders = pgTable(
+  "reminders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    elderId: uuid("elder_id").notNull().references(() => elders.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    type: text("type").notNull().default("custom"),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    repeatRule: text("repeat_rule"),
+    status: text("status").notNull().default("active"),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => profiles.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("reminders_family_id_idx").on(table.familyId),
+    index("reminders_elder_id_idx").on(table.elderId),
+    index("reminders_due_at_idx").on(table.dueAt),
+    index("reminders_status_idx").on(table.status),
+  ],
+);
