@@ -1,5 +1,7 @@
 import {
   date,
+  index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -67,3 +69,34 @@ export const elders = pgTable("elders", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const bloodPressureRecords = pgTable(
+  "blood_pressure_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    elderId: uuid("elder_id").notNull().references(() => elders.id, {
+      onDelete: "cascade",
+    }),
+    recordedBy: uuid("recorded_by").notNull().references(() => profiles.id),
+    measuredAt: timestamp("measured_at", { withTimezone: true }).notNull(),
+    period: text("period").notNull(),
+    systolic: integer("systolic").notNull(),
+    diastolic: integer("diastolic").notNull(),
+    pulse: integer("pulse").notNull(),
+    imageKey: text("image_key"),
+    source: text("source").notNull().default("web"),
+    status: text("status").notNull().default("confirmed"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("bp_records_family_id_idx").on(table.familyId),
+    index("bp_records_elder_id_idx").on(table.elderId),
+    index("bp_records_measured_at_idx").on(table.measuredAt),
+    index("bp_records_elder_measured_at_idx").on(table.elderId, table.measuredAt),
+  ],
+);
