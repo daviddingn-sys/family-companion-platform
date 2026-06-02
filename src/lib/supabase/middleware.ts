@@ -1,10 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { getMissingPublicSupabaseEnvKeys } from "@/lib/env";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
+
+  if (getMissingPublicSupabaseEnvKeys().length > 0) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
