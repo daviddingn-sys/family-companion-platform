@@ -88,7 +88,7 @@ export function MembersClient({ familyId }: { familyId: string }) {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">家庭成员</h1>
-        <p className="text-sm text-muted-foreground">第一阶段支持成员列表和邀请占位，后续接入邀请确认流程。</p>
+        <p className="text-sm text-muted-foreground">支持按邮箱或手机号创建邀请，被邀请人登录后可在邀请页面接受。</p>
       </div>
       <Card className="rounded-lg">
         <CardHeader>
