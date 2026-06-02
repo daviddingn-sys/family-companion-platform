@@ -64,6 +64,8 @@ pnpm dev
 pnpm typecheck
 pnpm lint
 pnpm build
+pnpm verify:auth-config
+pnpm verify:build
 pnpm db:generate
 pnpm db:migrate
 ```
