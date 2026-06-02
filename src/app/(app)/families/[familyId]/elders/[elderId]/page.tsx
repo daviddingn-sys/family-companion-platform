@@ -40,6 +40,9 @@ export default async function ElderPage({
           <Button asChild variant="outline">
             <Link href={`/families/${familyId}/elders/${elderId}/blood-pressure`}>血压记录</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href={`/families/${familyId}/elders/${elderId}/medications`}>用药记录</Link>
+          </Button>
           <Button asChild>
             <Link href={`/families/${familyId}/elders/${elderId}/edit`}>编辑</Link>
           </Button>
