@@ -2,6 +2,12 @@
 
 ## 1. 准备环境变量
 
+没有 `.env.local` 时，可以先验证登录页配置提示：
+
+```bash
+pnpm verify:auth-config
+```
+
 复制示例文件：
 
 ```bash
