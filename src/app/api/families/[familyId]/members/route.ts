@@ -48,6 +48,26 @@ export async function POST(
   }
 
   const admin = createSupabaseAdminClient();
+  const email = parsed.data.email ? parsed.data.email.toLowerCase() : "";
+  const duplicateFilters = [];
+  if (email) duplicateFilters.push(`invited_email.eq.${email}`);
+  if (parsed.data.phone) duplicateFilters.push(`invited_phone.eq.${parsed.data.phone}`);
+
+  if (duplicateFilters.length > 0) {
+    const { data: duplicate, error: duplicateError } = await admin
+      .from("family_members")
+      .select("id")
+      .eq("family_id", familyId)
+      .neq("status", "removed")
+      .or(duplicateFilters.join(","))
+      .maybeSingle();
+
+    if (duplicateError) return NextResponse.json({ error: duplicateError.message }, { status: 500 });
+    if (duplicate) {
+      return NextResponse.json({ error: "该成员已在家庭中或已有待处理邀请" }, { status: 409 });
+    }
+  }
+
   const { data, error } = await admin
     .from("family_members")
     .insert({
@@ -56,7 +76,7 @@ export async function POST(
       role: parsed.data.role,
       relationship: parsed.data.relationship || null,
       status: "invited",
-      invited_email: parsed.data.email || null,
+      invited_email: email || null,
       invited_phone: parsed.data.phone || null,
     })
     .select("id,role,relationship,status,invited_email,invited_phone,created_at")
