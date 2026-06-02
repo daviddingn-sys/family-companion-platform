@@ -1,11 +1,19 @@
 import { relations } from "drizzle-orm";
-import { bloodPressureRecords, elders, families, familyMembers, profiles } from "./schema";
+import {
+  bloodPressureRecords,
+  elders,
+  families,
+  familyMembers,
+  medications,
+  profiles,
+} from "./schema";
 
 export const profileRelations = relations(profiles, ({ many }) => ({
   ownedFamilies: many(families),
   familyMemberships: many(familyMembers),
   createdElders: many(elders),
   bloodPressureRecords: many(bloodPressureRecords),
+  medications: many(medications),
 }));
 
 export const familyRelations = relations(families, ({ one, many }) => ({
@@ -16,6 +24,7 @@ export const familyRelations = relations(families, ({ one, many }) => ({
   members: many(familyMembers),
   elders: many(elders),
   bloodPressureRecords: many(bloodPressureRecords),
+  medications: many(medications),
 }));
 
 export const familyMemberRelations = relations(familyMembers, ({ one }) => ({
@@ -39,6 +48,7 @@ export const elderRelations = relations(elders, ({ one, many }) => ({
     references: [profiles.id],
   }),
   bloodPressureRecords: many(bloodPressureRecords),
+  medications: many(medications),
 }));
 
 export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ one }) => ({
@@ -52,6 +62,21 @@ export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ o
   }),
   recorder: one(profiles, {
     fields: [bloodPressureRecords.recordedBy],
+    references: [profiles.id],
+  }),
+}));
+
+export const medicationRelations = relations(medications, ({ one }) => ({
+  family: one(families, {
+    fields: [medications.familyId],
+    references: [families.id],
+  }),
+  elder: one(elders, {
+    fields: [medications.elderId],
+    references: [elders.id],
+  }),
+  creator: one(profiles, {
+    fields: [medications.createdBy],
     references: [profiles.id],
   }),
 }));
