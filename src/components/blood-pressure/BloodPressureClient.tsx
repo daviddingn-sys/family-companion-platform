@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, Plus } from "lucide-react";
+import { Activity, Download, FileUp, Plus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,12 @@ const periodLabels: Record<string, string> = {
   night: "夜",
 };
 
+const chartMetrics = [
+  { key: "systolic", label: "高压", color: "#dc2626" },
+  { key: "diastolic", label: "低压", color: "#2563eb" },
+  { key: "pulse", label: "脉搏", color: "#059669" },
+] as const;
+
 function currentMonth() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -74,6 +80,8 @@ export function BloodPressureClient({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
   const [form, setForm] = useState({
     measuredAt: defaultMeasuredAt(),
     period: defaultPeriod(),
@@ -151,6 +159,117 @@ export function BloodPressureClient({
     load();
   }
 
+  async function importFile(file: File | null) {
+    if (!file) return;
+    setError("");
+    setImportMessage("");
+    setImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${endpoint}/import`, {
+      method: "POST",
+      body: formData,
+    });
+    const result = await response.json();
+    setImporting(false);
+
+    if (!response.ok) {
+      setError(result.error ?? "导入失败");
+      return;
+    }
+
+    setImportMessage(`导入完成：成功 ${result.inserted} 条，失败 ${result.failed} 条`);
+    load();
+  }
+
+  function generateLine(points: { x: number; y: number }[]) {
+    return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`).join(" ");
+  }
+
+  function renderTrendChart() {
+    const confirmed = records
+      .filter((record) => record.status === "confirmed")
+      .slice()
+      .reverse();
+
+    if (confirmed.length === 0) {
+      return <p className="text-sm text-muted-foreground">本月暂无可绘制的确认记录。</p>;
+    }
+
+    const values = confirmed.flatMap((record) => [record.systolic, record.diastolic, record.pulse]);
+    const min = Math.max(0, Math.floor((Math.min(...values) - 10) / 10) * 10);
+    const max = Math.ceil((Math.max(...values) + 10) / 10) * 10;
+    const range = max - min || 1;
+    const width = Math.max(confirmed.length * 58, 680);
+    const height = 260;
+    const left = 42;
+    const right = 18;
+    const top = 18;
+    const bottom = 42;
+    const chartWidth = width - left - right;
+    const chartHeight = height - top - bottom;
+    const xFor = (index: number) =>
+      left + (confirmed.length === 1 ? chartWidth / 2 : (index / (confirmed.length - 1)) * chartWidth);
+    const yFor = (value: number) => top + chartHeight - ((value - min) / range) * chartHeight;
+    const ticks = Array.from({ length: 5 }, (_, index) => Math.round(min + (range / 4) * index));
+
+    return (
+      <div className="overflow-x-auto">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block">
+          {ticks.map((tick) => (
+            <g key={tick}>
+              <line x1={left} y1={yFor(tick)} x2={width - right} y2={yFor(tick)} stroke="#e5e7eb" />
+              <text x={left - 8} y={yFor(tick) + 4} textAnchor="end" className="fill-muted-foreground text-[10px]">
+                {tick}
+              </text>
+            </g>
+          ))}
+          {confirmed.map((record, index) => (
+            <text
+              key={record.id}
+              x={xFor(index)}
+              y={height - 12}
+              textAnchor="middle"
+              className="fill-muted-foreground text-[10px]"
+            >
+              {new Date(record.measured_at).getDate()}日
+            </text>
+          ))}
+          {chartMetrics.map((metric) => {
+            const points = confirmed.map((record, index) => ({
+              x: xFor(index),
+              y: yFor(record[metric.key]),
+            }));
+            return (
+              <g key={metric.key}>
+                <path
+                  d={generateLine(points)}
+                  fill="none"
+                  stroke={metric.color}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {points.map((point, index) => (
+                  <circle
+                    key={`${metric.key}-${confirmed[index].id}`}
+                    cx={point.x}
+                    cy={point.y}
+                    r="3"
+                    fill={metric.color}
+                    stroke="white"
+                    strokeWidth="1.5"
+                  />
+                ))}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
@@ -158,12 +277,20 @@ export function BloodPressureClient({
           <h1 className="text-2xl font-semibold">{elderName}的血压记录</h1>
           <p className="text-sm text-muted-foreground">当前模块已按家庭和老人档案隔离数据。</p>
         </div>
-        <Input
-          className="w-36"
-          type="month"
-          value={month}
-          onChange={(event) => setMonth(event.target.value)}
-        />
+        <div className="flex flex-wrap justify-end gap-2">
+          <Input
+            className="w-36"
+            type="month"
+            value={month}
+            onChange={(event) => setMonth(event.target.value)}
+          />
+          <Button asChild variant="outline">
+            <a href={`${endpoint}/export?month=${month}`}>
+              <Download className="size-4" />
+              导出 CSV
+            </a>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
@@ -268,6 +395,47 @@ export function BloodPressureClient({
               {saving ? "保存中..." : "保存记录"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="size-4" />
+            月度趋势
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
+            {chartMetrics.map((metric) => (
+              <span key={metric.key} className="inline-flex items-center gap-1.5">
+                <span className="h-0.5 w-4 rounded" style={{ backgroundColor: metric.color }} />
+                {metric.label}
+              </span>
+            ))}
+          </div>
+          {renderTrendChart()}
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileUp className="size-4" />
+            导入记录
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            disabled={importing}
+            onChange={(event) => importFile(event.target.files?.[0] ?? null)}
+          />
+          <p className="text-xs text-muted-foreground">
+            支持列名：日期、时间、时段、高压、低压、脉搏、备注。
+          </p>
+          {importMessage && <p className="text-sm text-muted-foreground">{importMessage}</p>}
         </CardContent>
       </Card>
 
