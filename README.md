@@ -95,6 +95,8 @@ pnpm db:migrate
 
 上线前按 [部署说明](docs/deployment.md) 执行。
 
+本地浏览器验证按 [本地验证说明](docs/local-verification.md) 执行。
+
 部署后访问：
 
 ```bash
