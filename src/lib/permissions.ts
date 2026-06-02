@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
+import { getMissingPublicSupabaseEnvKeys } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type FamilyRole = "owner" | "admin" | "member" | "viewer";
 
 export async function getRouteUser(): Promise<User | NextResponse> {
+  const missingEnv = getMissingPublicSupabaseEnvKeys();
+  if (missingEnv.length > 0) {
+    return NextResponse.json(
+      {
+        error: "Supabase is not configured.",
+        status: "missing_required_env",
+        missingRequiredEnv: missingEnv,
+      },
+      { status: 503 },
+    );
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
