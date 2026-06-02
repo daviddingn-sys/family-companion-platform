@@ -6,9 +6,10 @@
 
 - Supabase Auth 注册/登录/退出
 - 用户 Profile 自动创建
+- 个人资料管理
 - 家庭管理
-- 家庭成员管理
-- 老人档案管理
+- 家庭成员管理（邀请占位、角色调整、移除成员）
+- 老人档案管理（新增、查看、编辑、删除）
 
 暂不包含 AI 陪伴、AI 聊天、AI 健康总结、用药提醒、周报月报、智能硬件和营销页面。
 
@@ -16,6 +17,7 @@
 
 - Next.js App Router
 - Supabase Auth / Database
+- Supabase SSR session middleware
 - Drizzle schema / migrations
 - Tailwind CSS v4
 - shadcn/ui 基础组件

@@ -24,6 +24,7 @@ export function MembersClient({ familyId }: { familyId: string }) {
   const [relationship, setRelationship] = useState("");
   const [role, setRole] = useState("member");
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
 
   const load = useCallback(() => {
     fetch(`/api/families/${familyId}/members`)
@@ -52,6 +53,34 @@ export function MembersClient({ familyId }: { familyId: string }) {
     setPhone("");
     setRelationship("");
     setRole("member");
+    load();
+  }
+
+  async function updateMember(memberId: string, payload: Record<string, string>) {
+    setActionError("");
+    const response = await fetch(`/api/families/${familyId}/members/${memberId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setActionError(result.error ?? "更新失败");
+      return;
+    }
+    load();
+  }
+
+  async function removeMember(memberId: string) {
+    setActionError("");
+    const response = await fetch(`/api/families/${familyId}/members/${memberId}`, {
+      method: "DELETE",
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setActionError(result.error ?? "移除失败");
+      return;
+    }
     load();
   }
 
@@ -97,10 +126,11 @@ export function MembersClient({ familyId }: { familyId: string }) {
           </form>
         </CardContent>
       </Card>
+      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       <div className="grid gap-3">
         {members.map((member) => (
           <Card key={member.id} className="rounded-lg">
-            <CardContent className="flex items-center justify-between gap-3 py-4">
+            <CardContent className="grid gap-3 py-4 md:grid-cols-[1fr_180px_auto] md:items-center">
               <div>
                 <p className="font-medium">
                   {member.profiles?.display_name ?? member.invited_email ?? member.invited_phone ?? "未命名成员"}
@@ -109,6 +139,32 @@ export function MembersClient({ familyId }: { familyId: string }) {
                   {member.relationship || "未填写关系"} · {member.role} · {member.status}
                 </p>
               </div>
+              {member.role === "owner" ? (
+                <p className="text-sm text-muted-foreground">家庭所有者</p>
+              ) : (
+                <Select
+                  value={member.role}
+                  onValueChange={(nextRole) => updateMember(member.id, { role: nextRole })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">管理员</SelectItem>
+                    <SelectItem value="member">成员</SelectItem>
+                    <SelectItem value="viewer">只读</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={member.role === "owner"}
+                onClick={() => removeMember(member.id)}
+              >
+                移除
+              </Button>
             </CardContent>
           </Card>
         ))}

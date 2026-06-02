@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteElderButton } from "@/components/elder/DeleteElderButton";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getFamilyMembership } from "@/lib/permissions";
@@ -56,6 +57,14 @@ export default async function ElderPage({
       <Card className="rounded-lg border-dashed">
         <CardContent className="py-5 text-sm text-muted-foreground">
           血压记录模块将在下一阶段接入，并关联到该老人档案。
+        </CardContent>
+      </Card>
+      <Card className="rounded-lg border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-base">危险操作</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DeleteElderButton familyId={familyId} elderId={elderId} />
         </CardContent>
       </Card>
     </div>
