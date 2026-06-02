@@ -100,3 +100,32 @@ export const bloodPressureRecords = pgTable(
     index("bp_records_elder_measured_at_idx").on(table.elderId, table.measuredAt),
   ],
 );
+
+export const medications = pgTable(
+  "medications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    elderId: uuid("elder_id").notNull().references(() => elders.id, {
+      onDelete: "cascade",
+    }),
+    name: text("name").notNull(),
+    dosage: text("dosage"),
+    frequency: text("frequency"),
+    instructions: text("instructions"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    status: text("status").notNull().default("active"),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => profiles.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("medications_family_id_idx").on(table.familyId),
+    index("medications_elder_id_idx").on(table.elderId),
+    index("medications_status_idx").on(table.status),
+  ],
+);
