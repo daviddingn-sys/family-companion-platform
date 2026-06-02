@@ -1,7 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getMissingPublicSupabaseEnvKeys } from "@/lib/env";
 
 export async function createSupabaseServerClient() {
+  const missingKeys = getMissingPublicSupabaseEnvKeys();
+  if (missingKeys.length > 0) {
+    throw new Error(`Missing Supabase public environment variables: ${missingKeys.join(", ")}`);
+  }
+
   const cookieStore = await cookies();
 
   return createServerClient(
