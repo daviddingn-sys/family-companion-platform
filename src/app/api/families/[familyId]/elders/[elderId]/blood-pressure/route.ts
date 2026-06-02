@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createBloodPressureAbnormalEvents } from "@/lib/abnormal-events";
 import { summarizeBloodPressure } from "@/lib/blood-pressure";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -99,5 +100,14 @@ export async function POST(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ record: data }, { status: 201 });
+
+  const abnormalEventResult = await createBloodPressureAbnormalEvents([data]);
+  return NextResponse.json(
+    {
+      record: data,
+      abnormalEventsCreated: abnormalEventResult.created,
+      abnormalEventError: abnormalEventResult.error?.message ?? null,
+    },
+    { status: 201 },
+  );
 }
