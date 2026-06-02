@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HeartPulse, Home, LogOut, User, Users, UserRoundCog } from "lucide-react";
+import { HeartPulse, Home, LogOut, MailCheck, User, Users, UserRoundCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const navItems = [
   { href: "/dashboard", label: "工作台", icon: Home },
   { href: "/families", label: "家庭", icon: Users },
+  { href: "/invitations", label: "邀请", icon: MailCheck },
   { href: "/profile", label: "个人资料", icon: User },
 ];
 
