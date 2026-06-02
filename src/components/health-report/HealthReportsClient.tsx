@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,9 @@ type HealthReport = {
   period_end: string;
   title: string;
   summary: string;
+  ai_summary: string | null;
+  ai_model: string | null;
+  ai_generated_at: string | null;
   stats: {
     bloodPressure?: {
       count?: number;
@@ -65,6 +68,7 @@ export function HealthReportsClient({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generatingSummaryId, setGeneratingSummaryId] = useState("");
   const [form, setForm] = useState({
     periodType: "weekly",
     periodStart: initialRange.periodStart,
@@ -116,6 +120,20 @@ export function HealthReportsClient({
     const result = await response.json();
     if (!response.ok) {
       setError(result.error ?? "删除失败");
+      return;
+    }
+    load();
+  }
+
+  async function generateSummary(reportId: string) {
+    setError("");
+    setGeneratingSummaryId(reportId);
+    const response = await fetch(`${endpoint}/${reportId}/ai-summary`, { method: "POST" });
+    const result = await response.json();
+    setGeneratingSummaryId("");
+
+    if (!response.ok) {
+      setError(result.error ?? "AI 总结生成失败");
       return;
     }
     load();
@@ -189,9 +207,15 @@ export function HealthReportsClient({
                       {report.period_type === "weekly" ? "周报" : "月报"} · {report.period_start} 至 {report.period_end} · {new Date(report.created_at).toLocaleString("zh-CN")}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => remove(report.id)}>
-                    删除
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => generateSummary(report.id)} disabled={generatingSummaryId === report.id}>
+                      <Sparkles className="size-4" />
+                      {generatingSummaryId === report.id ? "生成中" : "AI 总结"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => remove(report.id)}>
+                      删除
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid gap-2 text-sm md:grid-cols-3">
                   <div className="rounded-md bg-muted p-3">血压记录：{report.stats.bloodPressure?.count ?? 0} 次</div>
@@ -201,6 +225,18 @@ export function HealthReportsClient({
                   <div className="rounded-md bg-muted p-3">异常记录：{report.stats.abnormalEvents?.count ?? 0} 条</div>
                 </div>
                 <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-sm font-sans leading-6">{report.summary}</pre>
+                {report.ai_summary && (
+                  <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                    <div className="mb-2 flex flex-wrap items-center gap-2 text-sm font-medium">
+                      <Sparkles className="size-4" />
+                      AI 健康总结
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {report.ai_model} · {report.ai_generated_at ? new Date(report.ai_generated_at).toLocaleString("zh-CN") : ""}
+                      </span>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-sm font-sans leading-6">{report.ai_summary}</pre>
+                  </div>
+                )}
               </div>
             ))
           )}
