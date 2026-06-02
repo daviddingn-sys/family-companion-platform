@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { createBloodPressureAbnormalEvents } from "@/lib/abnormal-events";
 import { parseBloodPressureRows } from "@/lib/blood-pressure-import";
 import { getRouteUser, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -46,21 +47,30 @@ export async function POST(
 
   let inserted = 0;
   let insertError: string | null = null;
+  let abnormalEventsCreated = 0;
+  let abnormalEventError: string | null = null;
   if (inserts.length > 0) {
     const { data, error } = await admin
       .from("blood_pressure_records")
       .insert(inserts)
-      .select("id");
+      .select("id,family_id,elder_id,recorded_by,measured_at,systolic,diastolic,pulse");
     inserted = data?.length ?? 0;
     insertError = error?.message ?? null;
+    if (data && data.length > 0) {
+      const abnormalEventResult = await createBloodPressureAbnormalEvents(data);
+      abnormalEventsCreated = abnormalEventResult.created;
+      abnormalEventError = abnormalEventResult.error?.message ?? null;
+    }
   }
 
   return NextResponse.json({
     total: rows.length,
     parsed: parsedRows.length,
     inserted,
+    abnormalEventsCreated,
     failed: invalidRows.length,
     insertError,
+    abnormalEventError,
     errors: invalidRows.slice(0, 20).map((row) => `第${row.rowNumber}行：${row.error}`),
   });
 }
