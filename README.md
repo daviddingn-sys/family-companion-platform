@@ -10,7 +10,7 @@
 - 家庭管理
 - 家庭成员管理（邀请占位、角色调整、移除成员）
 - 老人档案管理（新增、查看、编辑、删除）
-- 血压记录模块（家庭/老人维度 CRUD、月度统计、趋势图、CSV 导出、Excel/CSV 导入）
+- 血压记录模块（家庭/老人维度 CRUD、月度统计、趋势图、CSV 导出、Excel/CSV 导入、图片上传、OCR 识别）
 
 暂不包含 AI 陪伴、AI 聊天、AI 健康总结、用药提醒、周报月报、智能硬件和营销页面。
 
@@ -32,6 +32,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 DATABASE_URL=
+COZE_WORKLOAD_IDENTITY_API_KEY=
 ```
 
 ## 开发命令
@@ -67,11 +68,11 @@ P1 核心表：
 
 - 趋势图
 - Excel/CSV 导入导出
+- 图片上传
+- OCR 识别
 
 后续继续从 `bp-monitor` 迁移增强：
 
-- 图片上传
-- OCR 识别
 - 可复用 UI 组件
 
 不迁移：
