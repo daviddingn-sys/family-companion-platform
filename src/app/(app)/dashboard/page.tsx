@@ -23,20 +23,50 @@ export default async function DashboardPage() {
     })
     .filter(Boolean) as string[];
 
-  const [{ count: memberCount }, { count: elderCount }] = await Promise.all([
+  const since30Days = new Date();
+  since30Days.setDate(since30Days.getDate() - 30);
+
+  const [
+    { count: memberCount },
+    { count: elderCount },
+    { count: bloodPressureCount },
+    { count: openAbnormalCount },
+    { count: activeReminderCount },
+    { count: reportCount },
+    { data: elders },
+    { data: recentAbnormalEvents },
+  ] = await Promise.all([
     familyIds.length
       ? admin.from("family_members").select("*", { count: "exact", head: true }).in("family_id", familyIds).neq("status", "removed")
       : Promise.resolve({ count: 0 }),
     familyIds.length
       ? admin.from("elders").select("*", { count: "exact", head: true }).in("family_id", familyIds)
       : Promise.resolve({ count: 0 }),
+    familyIds.length
+      ? admin.from("blood_pressure_records").select("*", { count: "exact", head: true }).in("family_id", familyIds).gte("measured_at", since30Days.toISOString())
+      : Promise.resolve({ count: 0 }),
+    familyIds.length
+      ? admin.from("abnormal_events").select("*", { count: "exact", head: true }).in("family_id", familyIds).neq("status", "resolved")
+      : Promise.resolve({ count: 0 }),
+    familyIds.length
+      ? admin.from("reminders").select("*", { count: "exact", head: true }).in("family_id", familyIds).eq("status", "active")
+      : Promise.resolve({ count: 0 }),
+    familyIds.length
+      ? admin.from("health_reports").select("*", { count: "exact", head: true }).in("family_id", familyIds)
+      : Promise.resolve({ count: 0 }),
+    familyIds.length
+      ? admin.from("elders").select("id,name,family_id").in("family_id", familyIds).order("created_at", { ascending: false }).limit(5)
+      : Promise.resolve({ data: [] }),
+    familyIds.length
+      ? admin.from("abnormal_events").select("id,title,severity,occurred_at,family_id,elder_id").in("family_id", familyIds).order("occurred_at", { ascending: false }).limit(5)
+      : Promise.resolve({ data: [] }),
   ]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">工作台</h1>
-        <p className="text-sm text-muted-foreground">先建立家庭、成员和老人档案，后续健康数据都会挂在这些基础对象下。</p>
+        <p className="text-sm text-muted-foreground">家庭、老人档案和健康数据的集中入口。</p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <Card className="rounded-lg">
@@ -58,6 +88,32 @@ export default async function DashboardPage() {
           <CardContent className="text-3xl font-semibold">{elderCount ?? 0}</CardContent>
         </Card>
       </div>
+      <div className="grid gap-3 md:grid-cols-4">
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">近 30 天血压</CardTitle>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold">{bloodPressureCount ?? 0}</CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">未解决异常</CardTitle>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold">{openAbnormalCount ?? 0}</CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">待处理提醒</CardTitle>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold">{activeReminderCount ?? 0}</CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">健康报告</CardTitle>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold">{reportCount ?? 0}</CardContent>
+        </Card>
+      </div>
       <Card className="rounded-lg">
         <CardHeader>
           <CardTitle>快捷入口</CardTitle>
@@ -76,6 +132,51 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle>老人档案</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(elders ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">暂无老人档案。</p>
+            ) : (
+              (elders ?? []).map((elder) => (
+                <Link
+                  key={elder.id}
+                  className="block rounded-md border p-3 text-sm hover:bg-accent"
+                  href={`/families/${elder.family_id}/elders/${elder.id}`}
+                >
+                  {elder.name}
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle>最近异常</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(recentAbnormalEvents ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">暂无异常记录。</p>
+            ) : (
+              (recentAbnormalEvents ?? []).map((event) => (
+                <Link
+                  key={event.id}
+                  className="block rounded-md border p-3 text-sm hover:bg-accent"
+                  href={`/families/${event.family_id}/elders/${event.elder_id}/abnormal-events`}
+                >
+                  <span className="font-medium">{event.title}</span>
+                  <span className="ml-2 text-muted-foreground">
+                    {event.severity} · {new Date(event.occurred_at).toLocaleString("zh-CN")}
+                  </span>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
