@@ -10,6 +10,10 @@ export const publicSupabaseEnvKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
 ] as const;
+export const adminSupabaseEnvKeys = [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+] as const;
 
 export function getMissingRequiredEnvKeys() {
   return requiredEnvKeys.filter((key) => !process.env[key]);
@@ -17,4 +21,8 @@ export function getMissingRequiredEnvKeys() {
 
 export function getMissingPublicSupabaseEnvKeys() {
   return publicSupabaseEnvKeys.filter((key) => !process.env[key]);
+}
+
+export function getMissingAdminSupabaseEnvKeys() {
+  return adminSupabaseEnvKeys.filter((key) => !process.env[key]);
 }
