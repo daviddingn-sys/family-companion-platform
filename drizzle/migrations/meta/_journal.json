@@ -43,6 +43,13 @@
       "when": 1780402137473,
       "tag": "0005_old_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780406757069,
+      "tag": "0006_abandoned_stellaris",
+      "breakpoints": true
     }
   ]
 }
