@@ -8,6 +8,13 @@
       "when": 1780374791548,
       "tag": "0000_pink_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780380869636,
+      "tag": "0001_breezy_black_panther",
+      "breakpoints": true
     }
   ]
 }
