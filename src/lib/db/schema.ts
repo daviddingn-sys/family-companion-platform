@@ -221,3 +221,26 @@ export const healthReports = pgTable(
     index("health_reports_period_idx").on(table.periodType, table.periodStart, table.periodEnd),
   ],
 );
+
+export const companionMessages = pgTable(
+  "companion_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    elderId: uuid("elder_id").notNull().references(() => elders.id, {
+      onDelete: "cascade",
+    }),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    model: text("model"),
+    createdBy: uuid("created_by").references(() => profiles.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("companion_messages_family_id_idx").on(table.familyId),
+    index("companion_messages_elder_id_idx").on(table.elderId),
+    index("companion_messages_created_at_idx").on(table.createdAt),
+  ],
+);
