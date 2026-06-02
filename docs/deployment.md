@@ -23,7 +23,7 @@ DATABASE_URL=
 COZE_WORKLOAD_IDENTITY_API_KEY=
 ```
 
-`COZE_WORKLOAD_IDENTITY_API_KEY` 只影响 OCR。未配置时，平台其他模块仍可运行。
+`COZE_WORKLOAD_IDENTITY_API_KEY` 影响 OCR 和 AI 健康总结。未配置时，OCR 不可用，AI 健康总结会回退为规则化总结，平台其他模块仍可运行。
 
 ## 3. 数据库迁移
 
@@ -129,4 +129,5 @@ pnpm build
 - 新增提醒事项
 - 新增异常记录
 - 生成健康周报或月报
+- 为健康报告生成 AI 健康总结
 - 打开工作台确认统计数据变化
