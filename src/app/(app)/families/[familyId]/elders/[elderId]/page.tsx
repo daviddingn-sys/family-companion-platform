@@ -36,9 +36,14 @@ export default async function ElderPage({
           <h1 className="text-2xl font-semibold">{elder.name}</h1>
           <p className="text-sm text-muted-foreground">老人档案详情</p>
         </div>
-        <Button asChild>
-          <Link href={`/families/${familyId}/elders/${elderId}/edit`}>编辑</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/families/${familyId}/elders/${elderId}/blood-pressure`}>血压记录</Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/families/${familyId}/elders/${elderId}/edit`}>编辑</Link>
+          </Button>
+        </div>
       </div>
       <Card className="rounded-lg">
         <CardHeader>
@@ -56,7 +61,7 @@ export default async function ElderPage({
       </Card>
       <Card className="rounded-lg border-dashed">
         <CardContent className="py-5 text-sm text-muted-foreground">
-          血压记录模块将在下一阶段接入，并关联到该老人档案。
+          血压记录模块已接入，并关联到该老人档案。
         </CardContent>
       </Card>
       <Card className="rounded-lg border-destructive/30">
