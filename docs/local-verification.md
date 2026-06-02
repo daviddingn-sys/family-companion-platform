@@ -8,6 +8,12 @@
 pnpm verify:auth-config
 ```
 
+提交或部署前可以跑完整构建验证：
+
+```bash
+pnpm verify:build
+```
+
 复制示例文件：
 
 ```bash
