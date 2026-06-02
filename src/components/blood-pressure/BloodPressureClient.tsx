@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, Download, FileUp, Plus, TrendingUp } from "lucide-react";
+import { Activity, Camera, Download, FileUp, Plus, ScanText, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ type BloodPressureRecord = {
   pulse: number;
   status: string;
   source: string;
+  image_key: string | null;
   note: string | null;
 };
 
@@ -81,7 +82,11 @@ export function BloodPressureClient({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [recognizing, setRecognizing] = useState(false);
   const [importMessage, setImportMessage] = useState("");
+  const [imageKey, setImageKey] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [form, setForm] = useState({
     measuredAt: defaultMeasuredAt(),
     period: defaultPeriod(),
@@ -125,6 +130,7 @@ export function BloodPressureClient({
         diastolic: form.diastolic,
         pulse: form.pulse,
         note: form.note,
+        imageKey,
         source: "web",
         status: "confirmed",
       }),
@@ -145,6 +151,8 @@ export function BloodPressureClient({
       pulse: "",
       note: "",
     });
+    setImageKey("");
+    setImageUrl("");
     load();
   }
 
@@ -157,6 +165,66 @@ export function BloodPressureClient({
       return;
     }
     load();
+  }
+
+  async function uploadImage(file: File | null) {
+    if (!file) return;
+    setError("");
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${endpoint}/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    const result = await response.json();
+    setUploading(false);
+
+    if (!response.ok) {
+      setError(result.error ?? "图片上传失败");
+      return;
+    }
+
+    setImageKey(result.key);
+    const signedResponse = await fetch(`${endpoint}/image-url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: result.key }),
+    });
+    const signed = await signedResponse.json();
+    if (signed.url) {
+      setImageUrl(signed.url);
+    }
+  }
+
+  async function recognizeImage() {
+    if (!imageKey) {
+      setError("请先上传血压计照片");
+      return;
+    }
+
+    setError("");
+    setRecognizing(true);
+    const response = await fetch(`${endpoint}/ocr`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: imageKey }),
+    });
+    const result = await response.json();
+    setRecognizing(false);
+
+    if (!response.ok) {
+      setError(result.error ?? "OCR 识别失败");
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      systolic: result.data?.systolic ? String(result.data.systolic) : current.systolic,
+      diastolic: result.data?.diastolic ? String(result.data.diastolic) : current.diastolic,
+      pulse: result.data?.pulse ? String(result.data.pulse) : current.pulse,
+    }));
   }
 
   async function importFile(file: File | null) {
@@ -390,6 +458,45 @@ export function BloodPressureClient({
                 onChange={(event) => setForm({ ...form, note: event.target.value })}
               />
             </div>
+            <div className="space-y-3 rounded-md border bg-muted/30 p-3 md:col-span-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <Label className="mr-2">血压计照片</Label>
+                <Input
+                  className="max-w-sm"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={uploading}
+                  onChange={(event) => uploadImage(event.target.files?.[0] ?? null)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!imageKey || recognizing}
+                  onClick={recognizeImage}
+                >
+                  {recognizing ? (
+                    "识别中..."
+                  ) : (
+                    <>
+                      <ScanText className="size-4" />
+                      OCR 识别
+                    </>
+                  )}
+                </Button>
+              </div>
+              {uploading && <p className="text-sm text-muted-foreground">图片上传中...</p>}
+              {imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imageUrl}
+                  alt="血压计照片"
+                  className="max-h-56 rounded-md border bg-background object-contain"
+                />
+              )}
+              <p className="text-xs text-muted-foreground">
+                OCR 需要配置 COZE_WORKLOAD_IDENTITY_API_KEY；识别结果会填入高压、低压和脉搏输入框。
+              </p>
+            </div>
             {error && <p className="text-sm text-destructive md:col-span-6">{error}</p>}
             <Button className="md:col-span-6" type="submit" disabled={saving}>
               {saving ? "保存中..." : "保存记录"}
@@ -464,6 +571,12 @@ export function BloodPressureClient({
                   <p className="text-sm text-muted-foreground">
                     {new Date(record.measured_at).toLocaleString("zh-CN")} · {periodLabels[record.period] ?? record.period} · {record.source}
                   </p>
+                  {record.image_key && (
+                    <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Camera className="size-3" />
+                      已关联照片
+                    </p>
+                  )}
                   {record.note && <p className="mt-1 text-sm">{record.note}</p>}
                 </div>
                 <Button variant="outline" size="sm" onClick={() => remove(record.id)}>
