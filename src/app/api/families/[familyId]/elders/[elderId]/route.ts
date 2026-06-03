@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { elderSchema } from "@/lib/validators/elder";
 
@@ -22,6 +23,7 @@ export async function GET(
     .eq("id", elderId)
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ elder: data });
 }
@@ -62,6 +64,7 @@ export async function PATCH(
     .select("*")
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ elder: data });
 }
