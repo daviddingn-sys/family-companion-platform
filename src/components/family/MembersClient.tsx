@@ -17,6 +17,19 @@ type Member = {
   profiles: { display_name: string | null; phone: string | null } | null;
 };
 
+const roleLabels: Record<string, string> = {
+  owner: "所有者",
+  admin: "管理员",
+  member: "成员",
+  viewer: "只读",
+};
+
+const statusLabels: Record<string, string> = {
+  active: "已加入",
+  invited: "待接受",
+  removed: "已移除",
+};
+
 export function MembersClient({ familyId }: { familyId: string }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [email, setEmail] = useState("");
@@ -25,11 +38,14 @@ export function MembersClient({ familyId }: { familyId: string }) {
   const [role, setRole] = useState("member");
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(() => {
     fetch(`/api/families/${familyId}/members`)
       .then((response) => response.json())
-      .then((result) => setMembers(result.members ?? []));
+      .then((result) => setMembers(result.members ?? []))
+      .finally(() => setLoading(false));
   }, [familyId]);
 
   useEffect(() => {
@@ -39,12 +55,14 @@ export function MembersClient({ familyId }: { familyId: string }) {
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setSaving(true);
     const response = await fetch(`/api/families/${familyId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, phone, relationship, role }),
     });
     const result = await response.json();
+    setSaving(false);
     if (!response.ok) {
       setError(result.error ?? "邀请失败");
       return;
@@ -122,13 +140,19 @@ export function MembersClient({ familyId }: { familyId: string }) {
               </Select>
             </div>
             {error && <p className="md:col-span-4 text-sm text-destructive">{error}</p>}
-            <Button className="md:col-span-4" type="submit">添加邀请</Button>
+            <Button className="md:col-span-4" type="submit" disabled={saving}>
+              {saving ? "添加中..." : "添加邀请"}
+            </Button>
           </form>
         </CardContent>
       </Card>
       {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       <div className="grid gap-3">
-        {members.map((member) => (
+        {loading ? (
+          <p className="text-sm text-muted-foreground">加载中...</p>
+        ) : members.length === 0 ? (
+          <p className="text-sm text-muted-foreground">暂无家庭成员。</p>
+        ) : members.map((member) => (
           <Card key={member.id} className="rounded-lg">
             <CardContent className="grid gap-3 py-4 md:grid-cols-[1fr_180px_auto] md:items-center">
               <div>
@@ -136,7 +160,7 @@ export function MembersClient({ familyId }: { familyId: string }) {
                   {member.profiles?.display_name ?? member.invited_email ?? member.invited_phone ?? "未命名成员"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {member.relationship || "未填写关系"} · {member.role} · {member.status}
+                  {member.relationship || "未填写关系"} · {roleLabels[member.role] ?? member.role} · {statusLabels[member.status] ?? member.status}
                 </p>
               </div>
               {member.role === "owner" ? (
