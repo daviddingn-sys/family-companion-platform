@@ -169,11 +169,21 @@ export function HealthReportsClient({
             </div>
             <div className="space-y-2">
               <Label>开始日期</Label>
-              <Input type="date" value={form.periodStart} onChange={(event) => setForm({ ...form, periodStart: event.target.value })} required />
+              <Input
+                type="date"
+                value={form.periodStart}
+                onChange={(event) => setForm((current) => ({ ...current, periodStart: event.target.value }))}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label>结束日期</Label>
-              <Input type="date" value={form.periodEnd} onChange={(event) => setForm({ ...form, periodEnd: event.target.value })} required />
+              <Input
+                type="date"
+                value={form.periodEnd}
+                onChange={(event) => setForm((current) => ({ ...current, periodEnd: event.target.value }))}
+                required
+              />
             </div>
             <div className="flex items-end">
               <Button className="w-full" type="submit" disabled={saving}>
