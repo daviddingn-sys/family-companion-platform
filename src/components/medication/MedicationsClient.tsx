@@ -38,6 +38,7 @@ export function MedicationsClient({
 }) {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -59,7 +60,16 @@ export function MedicationsClient({
   const load = useCallback(() => {
     fetch(endpoint)
       .then((response) => response.json())
-      .then((result) => setMedications(result.medications ?? []))
+      .then((result) => {
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        setLoadError("");
+        setMedications(result.medications ?? []);
+      })
+      .catch((loadError: Error) => {
+        setLoadError(loadError.message || "用药记录加载失败");
+      })
       .finally(() => setLoading(false));
   }, [endpoint]);
 
@@ -237,6 +247,8 @@ export function MedicationsClient({
         <CardContent className="space-y-3">
           {loading ? (
             <p className="text-sm text-muted-foreground">加载中...</p>
+          ) : loadError ? (
+            <p className="text-sm text-destructive">{loadError}</p>
           ) : medications.length === 0 ? (
             <p className="text-sm text-muted-foreground">暂无用药记录。</p>
           ) : (
