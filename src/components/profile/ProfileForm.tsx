@@ -56,7 +56,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <Input
               id="displayName"
               value={form.displayName}
-              onChange={(event) => setForm({ ...form, displayName: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, displayName: event.target.value }))}
               required
             />
           </div>
@@ -65,7 +65,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <Input
               id="phone"
               value={form.phone}
-              onChange={(event) => setForm({ ...form, phone: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
             />
           </div>
           <div className="space-y-2">
@@ -73,7 +73,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <Input
               id="avatarUrl"
               value={form.avatarUrl}
-              onChange={(event) => setForm({ ...form, avatarUrl: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, avatarUrl: event.target.value }))}
               placeholder="https://..."
             />
           </div>
