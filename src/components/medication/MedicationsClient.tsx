@@ -122,6 +122,10 @@ export function MedicationsClient({
   }
 
   async function remove(medicationId: string) {
+    if (!window.confirm("确定删除这条用药记录吗？")) {
+      return;
+    }
+
     setError("");
     const response = await fetch(`${endpoint}/${medicationId}`, { method: "DELETE" });
     const result = await response.json();
