@@ -3,7 +3,7 @@ import {
   createBloodPressureImageSignedUrl,
   isBloodPressureImageKeyForElder,
 } from "@/lib/blood-pressure-image";
-import { getRouteUser, requireFamilyMember } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember } from "@/lib/permissions";
 
 export async function POST(
   request: NextRequest,
@@ -15,6 +15,9 @@ export async function POST(
 
   const membership = await requireFamilyMember(familyId, user.id);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const body = await request.json().catch(() => null);
   const key = String(body?.key ?? "");
