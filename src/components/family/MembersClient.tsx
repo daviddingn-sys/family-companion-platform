@@ -30,7 +30,15 @@ const statusLabels: Record<string, string> = {
   removed: "已移除",
 };
 
-export function MembersClient({ familyId, canManage }: { familyId: string; canManage: boolean }) {
+export function MembersClient({
+  familyId,
+  canManage,
+  currentRole,
+}: {
+  familyId: string;
+  canManage: boolean;
+  currentRole: string;
+}) {
   const [members, setMembers] = useState<Member[]>([]);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,6 +48,7 @@ export function MembersClient({ familyId, canManage }: { familyId: string; canMa
   const [actionError, setActionError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const canManageAdmins = currentRole === "owner";
 
   const load = useCallback(() => {
     fetch(`/api/families/${familyId}/members`)
@@ -134,7 +143,7 @@ export function MembersClient({ familyId, canManage }: { familyId: string; canMa
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">管理员</SelectItem>
+                  {canManageAdmins && <SelectItem value="admin">管理员</SelectItem>}
                   <SelectItem value="member">成员</SelectItem>
                   <SelectItem value="viewer">只读</SelectItem>
                 </SelectContent>
@@ -171,7 +180,7 @@ export function MembersClient({ familyId, canManage }: { familyId: string; canMa
                   {member.relationship || "未填写关系"} · {roleLabels[member.role] ?? member.role} · {statusLabels[member.status] ?? member.status}
                 </p>
               </div>
-              {!canManage || member.role === "owner" ? (
+              {!canManage || member.role === "owner" || (!canManageAdmins && member.role === "admin") ? (
                 <p className="text-sm text-muted-foreground">{roleLabels[member.role] ?? member.role}</p>
               ) : (
                 <Select
@@ -182,7 +191,7 @@ export function MembersClient({ familyId, canManage }: { familyId: string; canMa
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">管理员</SelectItem>
+                    {canManageAdmins && <SelectItem value="admin">管理员</SelectItem>}
                     <SelectItem value="member">成员</SelectItem>
                     <SelectItem value="viewer">只读</SelectItem>
                   </SelectContent>
@@ -192,7 +201,7 @@ export function MembersClient({ familyId, canManage }: { familyId: string; canMa
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={!canManage || member.role === "owner"}
+                disabled={!canManage || member.role === "owner" || (!canManageAdmins && member.role === "admin")}
                 onClick={() => removeMember(member.id)}
               >
                 移除
