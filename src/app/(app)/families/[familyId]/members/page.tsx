@@ -13,5 +13,11 @@ export default async function MembersPage({
   const membership = await getFamilyMembership(familyId, user.id);
   if (!membership) notFound();
 
-  return <MembersClient familyId={familyId} canManage={membership.role === "owner" || membership.role === "admin"} />;
+  return (
+    <MembersClient
+      familyId={familyId}
+      canManage={membership.role === "owner" || membership.role === "admin"}
+      currentRole={membership.role}
+    />
+  );
 }
