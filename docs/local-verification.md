@@ -14,6 +14,13 @@ pnpm verify:auth-config
 pnpm verify:build
 ```
 
+如果只想验证当前生产构建和 `/api/health`：
+
+```bash
+pnpm build
+pnpm verify:production-health
+```
+
 复制示例文件：
 
 ```bash
