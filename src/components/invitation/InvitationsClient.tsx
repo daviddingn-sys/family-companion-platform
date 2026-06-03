@@ -19,6 +19,12 @@ type Invitation = {
   } | null;
 };
 
+const roleLabels: Record<string, string> = {
+  admin: "管理员",
+  member: "成员",
+  viewer: "只读",
+};
+
 export function InvitationsClient() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [error, setError] = useState("");
@@ -96,7 +102,7 @@ export function InvitationsClient() {
                 <div>
                   <p className="font-medium">{invitation.families?.name ?? "未命名家庭"}</p>
                   <p className="text-sm text-muted-foreground">
-                    {invitation.relationship || "未填写关系"} · {invitation.role} · {new Date(invitation.created_at).toLocaleString("zh-CN")}
+                    {invitation.relationship || "未填写关系"} · {roleLabels[invitation.role] ?? invitation.role} · {new Date(invitation.created_at).toLocaleString("zh-CN")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {invitation.invited_email || invitation.invited_phone}
