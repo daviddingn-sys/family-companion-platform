@@ -23,6 +23,14 @@ DATABASE_URL=
 COZE_WORKLOAD_IDENTITY_API_KEY=
 ```
 
+获取位置：
+
+- `NEXT_PUBLIC_SUPABASE_URL`：Supabase 项目 `Settings` -> `Data API` 或项目 API 页面中的 Project URL。
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`：Supabase 项目 `Settings` -> `API Keys` 里的 Publishable key。
+- `SUPABASE_SERVICE_ROLE_KEY`：Supabase 项目 `Settings` -> `API Keys` 里的 Secret key，只能放服务端环境变量。
+- `DATABASE_URL`：Supabase 项目顶部 `Connect` -> `Connection string`，选择 Transaction pooler 或 Session pooler 的 Postgres URL，并填入数据库密码。
+- `COZE_WORKLOAD_IDENTITY_API_KEY`：Coze 工作区的 API key。第一阶段可留空。
+
 `COZE_WORKLOAD_IDENTITY_API_KEY` 影响 OCR 和 AI 健康总结。未配置时，OCR 不可用，AI 健康总结会回退为规则化总结，平台其他模块仍可运行。
 
 ## 3. 数据库迁移
