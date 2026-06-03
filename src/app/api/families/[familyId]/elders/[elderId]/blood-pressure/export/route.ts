@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRouteUser, requireFamilyMember } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getMonthRange } from "@/lib/validators/blood-pressure";
 
@@ -21,6 +21,9 @@ export async function GET(
 
   const membership = await requireFamilyMember(familyId, user.id);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const month = request.nextUrl.searchParams.get("month");
   const admin = createSupabaseAdminClient();
