@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { familySchema } from "@/lib/validators/family";
 
@@ -21,6 +22,7 @@ export async function GET(
     .eq("id", familyId)
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "家庭不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ family: data, membership });
 }
@@ -50,6 +52,7 @@ export async function PATCH(
     .select("id,name,owner_user_id,created_at,updated_at")
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "家庭不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ family: data });
 }
