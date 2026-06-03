@@ -6,6 +6,13 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
+const severityLabels: Record<string, string> = {
+  low: "低",
+  medium: "中",
+  high: "高",
+  critical: "紧急",
+};
+
 export default async function DashboardPage() {
   const user = await requireUser();
   const admin = createSupabaseAdminClient();
@@ -169,7 +176,7 @@ export default async function DashboardPage() {
                 >
                   <span className="font-medium">{event.title}</span>
                   <span className="ml-2 text-muted-foreground">
-                    {event.severity} · {new Date(event.occurred_at).toLocaleString("zh-CN")}
+                    {severityLabels[event.severity] ?? event.severity} · {new Date(event.occurred_at).toLocaleString("zh-CN")}
                   </span>
                 </Link>
               ))
