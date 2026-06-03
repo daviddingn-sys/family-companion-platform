@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 import { reminderSchema } from "@/lib/validators/reminder";
 
 function parseDueAt(value?: string) {
@@ -33,6 +34,7 @@ export async function GET(
     .eq("id", reminderId)
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "提醒事项不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ reminder: data });
 }
@@ -75,6 +77,7 @@ export async function PATCH(
     .select("*")
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "提醒事项不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ reminder: data });
 }
