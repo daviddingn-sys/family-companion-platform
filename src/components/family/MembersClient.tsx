@@ -52,8 +52,12 @@ export function MembersClient({
 
   const load = useCallback(() => {
     fetch(`/api/families/${familyId}/members`)
-      .then((response) => response.json())
-      .then((result) => setMembers(result.members ?? []))
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "成员列表加载失败");
+        setMembers(result.members ?? []);
+      })
+      .catch((loadError) => setActionError(loadError instanceof Error ? loadError.message : "成员列表加载失败"))
       .finally(() => setLoading(false));
   }, [familyId]);
 
