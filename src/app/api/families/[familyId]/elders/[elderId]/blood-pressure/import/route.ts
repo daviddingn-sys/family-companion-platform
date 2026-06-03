@@ -5,6 +5,13 @@ import { parseBloodPressureRows } from "@/lib/blood-pressure-import";
 import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+const MAX_IMPORT_SIZE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_IMPORT_TYPES = new Set([
+  "text/csv",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string }> },
@@ -23,6 +30,16 @@ export async function POST(
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "请上传文件" }, { status: 400 });
+  }
+
+  const fileName = file.name.toLowerCase();
+  const hasSupportedExtension = fileName.endsWith(".csv") || fileName.endsWith(".xls") || fileName.endsWith(".xlsx");
+  if (!hasSupportedExtension && !SUPPORTED_IMPORT_TYPES.has(file.type)) {
+    return NextResponse.json({ error: "仅支持 CSV、XLS、XLSX 文件" }, { status: 400 });
+  }
+
+  if (file.size > MAX_IMPORT_SIZE_BYTES) {
+    return NextResponse.json({ error: "导入文件不能超过 5MB" }, { status: 400 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
