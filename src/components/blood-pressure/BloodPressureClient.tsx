@@ -416,13 +416,13 @@ export function BloodPressureClient({
               <Input
                 type="datetime-local"
                 value={form.measuredAt}
-                onChange={(event) => setForm({ ...form, measuredAt: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, measuredAt: event.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
               <Label>时段</Label>
-              <Select value={form.period} onValueChange={(period) => setForm({ ...form, period })}>
+              <Select value={form.period} onValueChange={(period) => setForm((current) => ({ ...current, period }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -439,7 +439,7 @@ export function BloodPressureClient({
               <Input
                 type="number"
                 value={form.systolic}
-                onChange={(event) => setForm({ ...form, systolic: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, systolic: event.target.value }))}
                 required
               />
             </div>
@@ -448,7 +448,7 @@ export function BloodPressureClient({
               <Input
                 type="number"
                 value={form.diastolic}
-                onChange={(event) => setForm({ ...form, diastolic: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, diastolic: event.target.value }))}
                 required
               />
             </div>
@@ -457,7 +457,7 @@ export function BloodPressureClient({
               <Input
                 type="number"
                 value={form.pulse}
-                onChange={(event) => setForm({ ...form, pulse: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, pulse: event.target.value }))}
                 required
               />
             </div>
@@ -465,7 +465,7 @@ export function BloodPressureClient({
               <Label>备注</Label>
               <Textarea
                 value={form.note}
-                onChange={(event) => setForm({ ...form, note: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
               />
             </div>
             <div className="space-y-3 rounded-md border bg-muted/30 p-3 md:col-span-6">
