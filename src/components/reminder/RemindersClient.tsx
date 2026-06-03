@@ -158,7 +158,7 @@ export function RemindersClient({
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold">{elderName}的提醒事项</h1>
-        <p className="text-sm text-muted-foreground">基础版只记录提醒事项，不执行后台推送调度。</p>
+        <p className="text-sm text-muted-foreground">记录用药、测量、就医和自定义事项，当前版本不执行后台推送调度。</p>
       </div>
 
       <Card className="rounded-lg">
