@@ -38,6 +38,10 @@ export async function PATCH(
     return NextResponse.json({ error: "不能修改家庭所有者" }, { status: 400 });
   }
 
+  if (membership.role !== "owner" && (target.role === "admin" || parsed.data.role === "admin")) {
+    return NextResponse.json({ error: "只有家庭所有者可以调整管理员" }, { status: 403 });
+  }
+
   const { data, error } = await admin
     .from("family_members")
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
@@ -71,6 +75,10 @@ export async function DELETE(
 
   if (!target || target.role === "owner") {
     return NextResponse.json({ error: "不能移除家庭所有者" }, { status: 400 });
+  }
+
+  if (membership.role !== "owner" && target.role === "admin") {
+    return NextResponse.json({ error: "只有家庭所有者可以移除管理员" }, { status: 403 });
   }
 
   const { error } = await admin
