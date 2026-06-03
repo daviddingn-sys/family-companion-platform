@@ -7,6 +7,8 @@ import {
 import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string }> },
@@ -29,6 +31,10 @@ export async function POST(
 
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
     return NextResponse.json({ error: "仅支持 JPG、PNG、WebP 图片" }, { status: 400 });
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return NextResponse.json({ error: "图片不能超过 8MB" }, { status: 400 });
   }
 
   await ensureBloodPressureImageBucket();
