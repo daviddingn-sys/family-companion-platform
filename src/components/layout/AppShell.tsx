@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { HeartPulse, Home, LogOut, MailCheck, User, Users, UserRoundCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -15,6 +15,7 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
 
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
@@ -40,18 +41,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[180px_1fr]">
-        <aside className="md:sticky md:top-20 md:h-fit">
-          <nav className="grid gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <item.icon className="size-4" />
-                {item.label}
-              </Link>
-            ))}
+        <aside className="min-w-0 md:sticky md:top-20 md:h-fit">
+          <nav className="grid gap-3 md:gap-1">
+            <div className="flex gap-1 overflow-x-auto pb-1 md:grid md:overflow-visible md:pb-0">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={
+                      "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-foreground " +
+                      (isActive ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "text-muted-foreground")
+                    }
+                  >
+                    <item.icon className="size-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
             <div className="mt-4 rounded-md border bg-card p-3 text-xs text-muted-foreground">
               <UserRoundCog className="mb-2 size-4 text-primary" />
               当前聚焦家庭档案、健康数据和基础报告。
