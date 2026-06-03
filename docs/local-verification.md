@@ -30,6 +30,13 @@ DATABASE_URL=
 COZE_WORKLOAD_IDENTITY_API_KEY=
 ```
 
+Supabase 中的对应位置：
+
+- URL：项目 `Settings` -> `Data API` 或 API 页面中的 Project URL。
+- Anon key：`Settings` -> `API Keys` -> Publishable key。
+- Service role key：`Settings` -> `API Keys` -> Secret key。
+- Database URL：项目顶部 `Connect` -> `Connection string`，选择 pooler 连接串并填入数据库密码。
+
 `COZE_WORKLOAD_IDENTITY_API_KEY` 可选。未配置时 OCR 不可用，AI 健康总结和吾伴 AI 会使用规则回退。
 
 ## 2. 初始化数据库
