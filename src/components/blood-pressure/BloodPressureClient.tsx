@@ -79,6 +79,7 @@ export function BloodPressureClient({
   const [records, setRecords] = useState<BloodPressureRecord[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -106,8 +107,15 @@ export function BloodPressureClient({
     fetch(`${endpoint}?month=${month}`)
       .then((response) => response.json())
       .then((result) => {
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        setLoadError("");
         setRecords(result.records ?? []);
         setSummary(result.summary ?? null);
+      })
+      .catch((loadError: Error) => {
+        setLoadError(loadError.message || "血压记录加载失败");
       })
       .finally(() => setLoading(false));
   }, [endpoint, month]);
@@ -571,6 +579,8 @@ export function BloodPressureClient({
         <CardContent className="space-y-3">
           {loading ? (
             <p className="text-sm text-muted-foreground">加载中...</p>
+          ) : loadError ? (
+            <p className="text-sm text-destructive">{loadError}</p>
           ) : records.length === 0 ? (
             <p className="text-sm text-muted-foreground">本月暂无血压记录。</p>
           ) : (
