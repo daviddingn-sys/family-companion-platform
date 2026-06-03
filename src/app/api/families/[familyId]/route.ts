@@ -55,7 +55,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> },
 ) {
   const { familyId } = await params;
@@ -64,6 +64,11 @@ export async function DELETE(
 
   const membership = await requireFamilyRole(familyId, user.id, ["owner"]);
   if (membership instanceof NextResponse) return membership;
+
+  const body = await request.json().catch(() => null);
+  if (body?.confirm !== "DELETE_FAMILY") {
+    return NextResponse.json({ error: "删除家庭需要确认" }, { status: 400 });
+  }
 
   const admin = createSupabaseAdminClient();
   const { error } = await admin.from("families").delete().eq("id", familyId);
