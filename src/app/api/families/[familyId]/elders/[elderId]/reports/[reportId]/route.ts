@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(
@@ -12,6 +12,9 @@ export async function GET(
 
   const membership = await requireFamilyMember(familyId, user.id);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
@@ -36,6 +39,9 @@ export async function DELETE(
 
   const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin"]);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const admin = createSupabaseAdminClient();
   const { error } = await admin
