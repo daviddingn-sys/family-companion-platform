@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBloodPressureAbnormalEvents } from "@/lib/abnormal-events";
 import { summarizeBloodPressure } from "@/lib/blood-pressure";
-import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { bloodPressureSchema, getMonthRange } from "@/lib/validators/blood-pressure";
-
-async function requireElderInFamily(familyId: string, elderId: string) {
-  const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("elders")
-    .select("id")
-    .eq("family_id", familyId)
-    .eq("id", elderId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return Boolean(data);
-}
 
 export async function GET(
   request: NextRequest,
@@ -29,9 +16,8 @@ export async function GET(
   const membership = await requireFamilyMember(familyId, user.id);
   if (membership instanceof NextResponse) return membership;
 
-  if (!(await requireElderInFamily(familyId, elderId))) {
-    return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
-  }
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const month = request.nextUrl.searchParams.get("month");
   const admin = createSupabaseAdminClient();
@@ -69,9 +55,8 @@ export async function POST(
   const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
   if (membership instanceof NextResponse) return membership;
 
-  if (!(await requireElderInFamily(familyId, elderId))) {
-    return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
-  }
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const body = await request.json().catch(() => null);
   const parsed = bloodPressureSchema.safeParse(body);
