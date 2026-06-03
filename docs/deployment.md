@@ -126,6 +126,7 @@ https://your-domain.vercel.app/api/health
 pnpm typecheck
 pnpm lint
 pnpm build
+pnpm verify:production-health
 ```
 
 上线后手工验证：
