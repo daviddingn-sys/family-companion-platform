@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "verify:auth-config": "node scripts/verify-auth-config.mjs",
     "verify:production-health": "node scripts/verify-production-health.mjs",
-    "verify:build": "pnpm verify:auth-config && pnpm typecheck && pnpm lint && pnpm build",
+    "verify:build": "pnpm verify:auth-config && pnpm typecheck && pnpm lint && pnpm build && pnpm verify:production-health",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
