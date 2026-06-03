@@ -34,8 +34,12 @@ export function InvitationsClient() {
 
   const load = useCallback(() => {
     fetch("/api/invitations")
-      .then((response) => response.json())
-      .then((result) => setInvitations(result.invitations ?? []))
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "邀请列表加载失败");
+        setInvitations(result.invitations ?? []);
+      })
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "邀请列表加载失败"))
       .finally(() => setLoading(false));
   }, []);
 
