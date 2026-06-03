@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCompanionReply } from "@/lib/ai-companion";
-import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { companionMessageSchema } from "@/lib/validators/companion-message";
 
@@ -45,17 +45,10 @@ export async function POST(
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
   }
 
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
+
   const admin = createSupabaseAdminClient();
-  const { data: elder, error: elderError } = await admin
-    .from("elders")
-    .select("id,name")
-    .eq("family_id", familyId)
-    .eq("id", elderId)
-    .single();
-
-  if (elderError) return NextResponse.json({ error: elderError.message }, { status: 500 });
-  if (!elder) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
-
   const { data: recentMessages, error: recentError } = await admin
     .from("companion_messages")
     .select("role,content")
