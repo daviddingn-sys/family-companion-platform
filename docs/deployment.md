@@ -123,10 +123,7 @@ https://your-domain.vercel.app/api/health
 执行：
 
 ```bash
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm verify:production-health
+pnpm verify:build
 ```
 
 上线后手工验证：
