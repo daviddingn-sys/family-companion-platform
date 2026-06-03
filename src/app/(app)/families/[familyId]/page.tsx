@@ -8,6 +8,13 @@ import { getFamilyMembership } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
+const roleLabels: Record<string, string> = {
+  owner: "所有者",
+  admin: "管理员",
+  member: "成员",
+  viewer: "只读",
+};
+
 export default async function FamilyPage({
   params,
 }: {
@@ -32,7 +39,7 @@ export default async function FamilyPage({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{family.name}</h1>
-          <p className="text-sm text-muted-foreground">你的角色：{membership.role}</p>
+          <p className="text-sm text-muted-foreground">你的角色：{roleLabels[membership.role] ?? membership.role}</p>
         </div>
         <Button asChild variant="outline">
           <Link href={`/families/${familyId}/settings`}>家庭设置</Link>
