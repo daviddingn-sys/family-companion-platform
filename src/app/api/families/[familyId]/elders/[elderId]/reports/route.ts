@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { healthReportSchema } from "@/lib/validators/health-report";
 
@@ -140,6 +140,9 @@ export async function POST(
 
   const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const body = await request.json().catch(() => null);
   const parsed = healthReportSchema.safeParse(body);
