@@ -30,7 +30,7 @@ const statusLabels: Record<string, string> = {
   removed: "已移除",
 };
 
-export function MembersClient({ familyId }: { familyId: string }) {
+export function MembersClient({ familyId, canManage }: { familyId: string; canManage: boolean }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -108,12 +108,13 @@ export function MembersClient({ familyId }: { familyId: string }) {
         <h1 className="text-2xl font-semibold">家庭成员</h1>
         <p className="text-sm text-muted-foreground">支持按邮箱或手机号创建邀请，被邀请人登录后可在邀请页面接受。</p>
       </div>
-      <Card className="rounded-lg">
-        <CardHeader>
-          <CardTitle>邀请成员</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-3 md:grid-cols-4" onSubmit={invite}>
+      {canManage ? (
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle>邀请成员</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="grid gap-3 md:grid-cols-4" onSubmit={invite}>
             <div className="space-y-2">
               <Label>邮箱</Label>
               <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" />
@@ -143,9 +144,16 @@ export function MembersClient({ familyId }: { familyId: string }) {
             <Button className="md:col-span-4" type="submit" disabled={saving}>
               {saving ? "添加中..." : "添加邀请"}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="rounded-lg">
+          <CardContent className="py-4">
+            <p className="text-sm text-muted-foreground">只有家庭所有者和管理员可以邀请或调整成员。</p>
+          </CardContent>
+        </Card>
+      )}
       {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       <div className="grid gap-3">
         {loading ? (
@@ -163,8 +171,8 @@ export function MembersClient({ familyId }: { familyId: string }) {
                   {member.relationship || "未填写关系"} · {roleLabels[member.role] ?? member.role} · {statusLabels[member.status] ?? member.status}
                 </p>
               </div>
-              {member.role === "owner" ? (
-                <p className="text-sm text-muted-foreground">家庭所有者</p>
+              {!canManage || member.role === "owner" ? (
+                <p className="text-sm text-muted-foreground">{roleLabels[member.role] ?? member.role}</p>
               ) : (
                 <Select
                   value={member.role}
@@ -184,7 +192,7 @@ export function MembersClient({ familyId }: { familyId: string }) {
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={member.role === "owner"}
+                disabled={!canManage || member.role === "owner"}
                 onClick={() => removeMember(member.id)}
               >
                 移除
