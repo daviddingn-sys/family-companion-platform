@@ -15,6 +15,13 @@ type Elder = {
   medical_notes: string | null;
 };
 
+const genderLabels: Record<string, string> = {
+  male: "男",
+  female: "女",
+  other: "其他",
+  unknown: "未填写性别",
+};
+
 export function EldersClient({ familyId }: { familyId: string }) {
   const [elders, setElders] = useState<Elder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +67,7 @@ export function EldersClient({ familyId }: { familyId: string }) {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  {elder.birth_date || "未填写生日"} · {elder.phone || "未填写电话"}
+                  {genderLabels[elder.gender] ?? elder.gender} · {elder.birth_date || "未填写生日"} · {elder.phone || "未填写电话"}
                 </p>
                 {elder.medical_notes && <p className="line-clamp-2 text-sm">{elder.medical_notes}</p>}
                 <Button asChild size="sm">
