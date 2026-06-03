@@ -152,7 +152,7 @@ export function MedicationsClient({
               <Label>药品名称</Label>
               <Input
                 value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 required
               />
             </div>
@@ -160,13 +160,13 @@ export function MedicationsClient({
               <Label>剂量</Label>
               <Input
                 value={form.dosage}
-                onChange={(event) => setForm({ ...form, dosage: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, dosage: event.target.value }))}
                 placeholder="如 5mg"
               />
             </div>
             <div className="space-y-2">
               <Label>状态</Label>
-              <Select value={form.status} onValueChange={(status) => setForm({ ...form, status })}>
+              <Select value={form.status} onValueChange={(status) => setForm((current) => ({ ...current, status }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -181,7 +181,7 @@ export function MedicationsClient({
               <Label>频次</Label>
               <Input
                 value={form.frequency}
-                onChange={(event) => setForm({ ...form, frequency: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, frequency: event.target.value }))}
                 placeholder="如 每日一次，早饭后"
               />
             </div>
@@ -190,7 +190,7 @@ export function MedicationsClient({
               <Input
                 type="date"
                 value={form.startDate}
-                onChange={(event) => setForm({ ...form, startDate: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, startDate: event.target.value }))}
               />
             </div>
             <div className="space-y-2">
@@ -198,21 +198,21 @@ export function MedicationsClient({
               <Input
                 type="date"
                 value={form.endDate}
-                onChange={(event) => setForm({ ...form, endDate: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, endDate: event.target.value }))}
               />
             </div>
             <div className="space-y-2 md:col-span-4">
               <Label>用药说明</Label>
               <Textarea
                 value={form.instructions}
-                onChange={(event) => setForm({ ...form, instructions: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, instructions: event.target.value }))}
               />
             </div>
             <div className="space-y-2 md:col-span-4">
               <Label>备注</Label>
               <Textarea
                 value={form.note}
-                onChange={(event) => setForm({ ...form, note: event.target.value })}
+                onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
               />
             </div>
             {error && <p className="text-sm text-destructive md:col-span-4">{error}</p>}
