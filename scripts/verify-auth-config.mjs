@@ -1,7 +1,12 @@
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync, renameSync } from "node:fs";
+import { join } from "node:path";
 
 const port = String(4300 + Math.floor(Math.random() * 1000));
 const baseUrl = `http://localhost:${port}`;
+const cwd = process.cwd();
+const envLocalPath = join(cwd, ".env.local");
+const envLocalBackupPath = join(cwd, `.env.local.verify-backup-${process.pid}`);
 const isWindows = process.platform === "win32";
 const command = isWindows ? "cmd.exe" : "pnpm";
 const args = isWindows
@@ -12,6 +17,13 @@ delete childEnv.NEXT_PUBLIC_SUPABASE_URL;
 delete childEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 delete childEnv.SUPABASE_SERVICE_ROLE_KEY;
 delete childEnv.DATABASE_URL;
+childEnv.NEXT_TELEMETRY_DISABLED = "1";
+
+let movedEnvLocal = false;
+if (existsSync(envLocalPath)) {
+  renameSync(envLocalPath, envLocalBackupPath);
+  movedEnvLocal = true;
+}
 
 const child = spawn(command, args, {
   env: childEnv,
@@ -20,7 +32,7 @@ const child = spawn(command, args, {
 
 let output = "";
 let settled = false;
-const timeout = setTimeout(() => fail("Timed out waiting for local dev server."), 45_000);
+const timeout = setTimeout(() => fail(`Timed out waiting for local dev server.\n${output}`), 90_000);
 
 child.stdout.on("data", (chunk) => {
   output += chunk.toString();
@@ -74,10 +86,28 @@ function fail(message) {
 function stopChild() {
   if (isWindows) {
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
-    return;
+  } else {
+    child.kill();
   }
 
-  child.kill();
+  restoreEnvLocal();
 }
+
+function restoreEnvLocal() {
+  if (movedEnvLocal && existsSync(envLocalBackupPath)) {
+    renameSync(envLocalBackupPath, envLocalPath);
+    movedEnvLocal = false;
+  }
+}
+
+process.on("exit", restoreEnvLocal);
+process.on("SIGINT", () => {
+  restoreEnvLocal();
+  process.exit(130);
+});
+process.on("SIGTERM", () => {
+  restoreEnvLocal();
+  process.exit(143);
+});
 
 waitForServer();
