@@ -115,6 +115,10 @@ export function HealthReportsClient({
   }
 
   async function remove(reportId: string) {
+    if (!window.confirm("确定删除这份健康报告吗？")) {
+      return;
+    }
+
     setError("");
     const response = await fetch(`${endpoint}/${reportId}`, { method: "DELETE" });
     const result = await response.json();
