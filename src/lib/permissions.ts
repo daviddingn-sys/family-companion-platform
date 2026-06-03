@@ -86,3 +86,28 @@ export async function requireFamilyRole(
 
   return membership;
 }
+
+export async function getElderInFamily(familyId: string, elderId: string) {
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("elders")
+    .select("id,name")
+    .eq("family_id", familyId)
+    .eq("id", elderId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as { id: string; name: string } | null;
+}
+
+export async function requireElderInFamily(familyId: string, elderId: string) {
+  const elder = await getElderInFamily(familyId, elderId);
+  if (!elder) {
+    return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
+  }
+
+  return elder;
+}
