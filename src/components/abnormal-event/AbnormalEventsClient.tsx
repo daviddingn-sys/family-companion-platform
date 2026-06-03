@@ -175,11 +175,15 @@ export function AbnormalEventsClient({
           <form className="grid gap-3 md:grid-cols-4" onSubmit={submit}>
             <div className="space-y-2 md:col-span-2">
               <Label>标题</Label>
-              <Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
+              <Input
+                value={form.title}
+                onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label>类型</Label>
-              <Select value={form.eventType} onValueChange={(eventType) => setForm({ ...form, eventType })}>
+              <Select value={form.eventType} onValueChange={(eventType) => setForm((current) => ({ ...current, eventType }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -194,7 +198,7 @@ export function AbnormalEventsClient({
             </div>
             <div className="space-y-2">
               <Label>严重程度</Label>
-              <Select value={form.severity} onValueChange={(severity) => setForm({ ...form, severity })}>
+              <Select value={form.severity} onValueChange={(severity) => setForm((current) => ({ ...current, severity }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -208,11 +212,16 @@ export function AbnormalEventsClient({
             </div>
             <div className="space-y-2">
               <Label>发生时间</Label>
-              <Input type="datetime-local" value={form.occurredAt} onChange={(event) => setForm({ ...form, occurredAt: event.target.value })} required />
+              <Input
+                type="datetime-local"
+                value={form.occurredAt}
+                onChange={(event) => setForm((current) => ({ ...current, occurredAt: event.target.value }))}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label>处理状态</Label>
-              <Select value={form.status} onValueChange={(status) => setForm({ ...form, status })}>
+              <Select value={form.status} onValueChange={(status) => setForm((current) => ({ ...current, status }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -225,11 +234,18 @@ export function AbnormalEventsClient({
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>关联血压记录 ID</Label>
-              <Input value={form.relatedBloodPressureRecordId} onChange={(event) => setForm({ ...form, relatedBloodPressureRecordId: event.target.value })} placeholder="可选" />
+              <Input
+                value={form.relatedBloodPressureRecordId}
+                onChange={(event) => setForm((current) => ({ ...current, relatedBloodPressureRecordId: event.target.value }))}
+                placeholder="可选"
+              />
             </div>
             <div className="space-y-2 md:col-span-4">
               <Label>说明</Label>
-              <Textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+              <Textarea
+                value={form.description}
+                onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+              />
             </div>
             {error && <p className="text-sm text-destructive md:col-span-4">{error}</p>}
             <Button className="md:col-span-4" type="submit" disabled={saving}>
