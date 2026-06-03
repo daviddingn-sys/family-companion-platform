@@ -38,7 +38,7 @@ function toLocalInputValue(value: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
   const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16).replace("T", " ");
 }
 
 export function RemindersClient({
@@ -158,11 +158,16 @@ export function RemindersClient({
           <form className="grid gap-3 md:grid-cols-4" onSubmit={submit}>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="reminder-title">标题</Label>
-              <Input id="reminder-title" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
+              <Input
+                id="reminder-title"
+                value={form.title}
+                onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label>类型</Label>
-              <Select value={form.type} onValueChange={(type) => setForm({ ...form, type })}>
+              <Select value={form.type} onValueChange={(type) => setForm((current) => ({ ...current, type }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -176,7 +181,7 @@ export function RemindersClient({
             </div>
             <div className="space-y-2">
               <Label>状态</Label>
-              <Select value={form.status} onValueChange={(status) => setForm({ ...form, status })}>
+              <Select value={form.status} onValueChange={(status) => setForm((current) => ({ ...current, status }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -190,15 +195,29 @@ export function RemindersClient({
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="reminder-due-at">计划时间</Label>
-              <Input id="reminder-due-at" type="datetime-local" value={form.dueAt} onChange={(event) => setForm({ ...form, dueAt: event.target.value })} />
+              <Input
+                id="reminder-due-at"
+                value={form.dueAt}
+                onChange={(event) => setForm((current) => ({ ...current, dueAt: event.target.value }))}
+                placeholder="如 2026-06-03 15:20"
+              />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="reminder-repeat-rule">重复说明</Label>
-              <Input id="reminder-repeat-rule" value={form.repeatRule} onChange={(event) => setForm({ ...form, repeatRule: event.target.value })} placeholder="如 每天早上、每周一" />
+              <Input
+                id="reminder-repeat-rule"
+                value={form.repeatRule}
+                onChange={(event) => setForm((current) => ({ ...current, repeatRule: event.target.value }))}
+                placeholder="如 每天早上、每周一"
+              />
             </div>
             <div className="space-y-2 md:col-span-4">
               <Label htmlFor="reminder-note">备注</Label>
-              <Textarea id="reminder-note" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} />
+              <Textarea
+                id="reminder-note"
+                value={form.note}
+                onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
+              />
             </div>
             {error && <p className="text-sm text-destructive md:col-span-4">{error}</p>}
             <Button className="md:col-span-4" type="submit" disabled={saving}>
