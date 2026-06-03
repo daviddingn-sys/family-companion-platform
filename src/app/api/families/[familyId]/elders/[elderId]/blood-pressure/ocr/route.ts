@@ -4,7 +4,7 @@ import {
   isBloodPressureImageKeyForElder,
 } from "@/lib/blood-pressure-image";
 import { recognizeBloodPressureImage } from "@/lib/blood-pressure-ocr";
-import { getRouteUser, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
 
 export async function POST(
   request: NextRequest,
@@ -16,6 +16,9 @@ export async function POST(
 
   const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const body = await request.json().catch(() => null);
   const key = String(body?.key ?? "");
