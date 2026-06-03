@@ -157,7 +157,7 @@ export function HealthReportsClient({
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold">{elderName}的健康报告</h1>
-        <p className="text-sm text-muted-foreground">基础版生成规则化周报/月报，不包含 AI 健康总结。</p>
+        <p className="text-sm text-muted-foreground">生成规则化周报/月报，并可在配置 AI 服务后生成健康总结。</p>
       </div>
 
       <Card className="rounded-lg">
