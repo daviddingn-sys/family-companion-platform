@@ -27,7 +27,11 @@ export default async function FamilySettingsPage({
         <CardTitle>家庭设置</CardTitle>
       </CardHeader>
       <CardContent>
-        <FamilyForm familyId={family.id} initialName={family.name} />
+        {membership.role === "owner" || membership.role === "admin" ? (
+          <FamilyForm familyId={family.id} initialName={family.name} />
+        ) : (
+          <p className="text-sm text-muted-foreground">只有家庭所有者和管理员可以修改家庭设置。</p>
+        )}
       </CardContent>
     </Card>
   );
