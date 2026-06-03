@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 import { medicationSchema } from "@/lib/validators/medication";
 
 export async function GET(
@@ -26,6 +27,7 @@ export async function GET(
     .eq("id", medicationId)
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "用药记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ medication: data });
 }
@@ -70,6 +72,7 @@ export async function PATCH(
     .select("*")
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "用药记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ medication: data });
 }
