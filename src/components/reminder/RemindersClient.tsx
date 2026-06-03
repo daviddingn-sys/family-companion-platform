@@ -52,6 +52,7 @@ export function RemindersClient({
 }) {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -71,7 +72,16 @@ export function RemindersClient({
   const load = useCallback(() => {
     fetch(endpoint)
       .then((response) => response.json())
-      .then((result) => setReminders(result.reminders ?? []))
+      .then((result) => {
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        setLoadError("");
+        setReminders(result.reminders ?? []);
+      })
+      .catch((loadError: Error) => {
+        setLoadError(loadError.message || "提醒事项加载失败");
+      })
       .finally(() => setLoading(false));
   }, [endpoint]);
 
@@ -241,6 +251,8 @@ export function RemindersClient({
         <CardContent className="space-y-3">
           {loading ? (
             <p className="text-sm text-muted-foreground">加载中...</p>
+          ) : loadError ? (
+            <p className="text-sm text-destructive">{loadError}</p>
           ) : reminders.length === 0 ? (
             <p className="text-sm text-muted-foreground">暂无提醒事项。</p>
           ) : (
