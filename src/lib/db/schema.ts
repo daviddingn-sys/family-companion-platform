@@ -19,15 +19,21 @@ export const profiles = pgTable("profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const families = pgTable("families", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  ownerUserId: uuid("owner_user_id").notNull().references(() => profiles.id, {
-    onDelete: "cascade",
-  }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const families = pgTable(
+  "families",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    ownerUserId: uuid("owner_user_id").notNull().references(() => profiles.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("families_owner_user_id_idx").on(table.ownerUserId),
+  ],
+);
 
 export const familyMembers = pgTable(
   "family_members",
@@ -49,27 +55,37 @@ export const familyMembers = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
+    index("family_members_family_id_idx").on(table.familyId),
+    index("family_members_user_status_idx").on(table.userId, table.status),
+    index("family_members_invited_email_status_idx").on(table.invitedEmail, table.status),
+    index("family_members_invited_phone_status_idx").on(table.invitedPhone, table.status),
     uniqueIndex("family_members_family_user_idx").on(table.familyId, table.userId),
   ],
 );
 
-export const elders = pgTable("elders", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  familyId: uuid("family_id").notNull().references(() => families.id, {
-    onDelete: "cascade",
-  }),
-  name: text("name").notNull(),
-  gender: text("gender").notNull().default("unknown"),
-  birthDate: date("birth_date"),
-  phone: text("phone"),
-  emergencyContactName: text("emergency_contact_name"),
-  emergencyContactPhone: text("emergency_contact_phone"),
-  address: text("address"),
-  medicalNotes: text("medical_notes"),
-  createdBy: uuid("created_by").references(() => profiles.id),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const elders = pgTable(
+  "elders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").notNull().references(() => families.id, {
+      onDelete: "cascade",
+    }),
+    name: text("name").notNull(),
+    gender: text("gender").notNull().default("unknown"),
+    birthDate: date("birth_date"),
+    phone: text("phone"),
+    emergencyContactName: text("emergency_contact_name"),
+    emergencyContactPhone: text("emergency_contact_phone"),
+    address: text("address"),
+    medicalNotes: text("medical_notes"),
+    createdBy: uuid("created_by").references(() => profiles.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("elders_family_created_at_idx").on(table.familyId, table.createdAt),
+  ],
+);
 
 export const bloodPressureRecords = pgTable(
   "blood_pressure_records",
