@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 
 export async function GET(
   _request: NextRequest,
@@ -25,6 +26,7 @@ export async function GET(
     .eq("id", reportId)
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "健康报告不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ report: data });
 }
