@@ -157,8 +157,8 @@ export function RemindersClient({
         <CardContent>
           <form className="grid gap-3 md:grid-cols-4" onSubmit={submit}>
             <div className="space-y-2 md:col-span-2">
-              <Label>标题</Label>
-              <Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
+              <Label htmlFor="reminder-title">标题</Label>
+              <Input id="reminder-title" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
             </div>
             <div className="space-y-2">
               <Label>类型</Label>
@@ -189,16 +189,16 @@ export function RemindersClient({
               </Select>
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label>计划时间</Label>
-              <Input type="datetime-local" value={form.dueAt} onChange={(event) => setForm({ ...form, dueAt: event.target.value })} />
+              <Label htmlFor="reminder-due-at">计划时间</Label>
+              <Input id="reminder-due-at" type="datetime-local" value={form.dueAt} onChange={(event) => setForm({ ...form, dueAt: event.target.value })} />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label>重复说明</Label>
-              <Input value={form.repeatRule} onChange={(event) => setForm({ ...form, repeatRule: event.target.value })} placeholder="如 每天早上、每周一" />
+              <Label htmlFor="reminder-repeat-rule">重复说明</Label>
+              <Input id="reminder-repeat-rule" value={form.repeatRule} onChange={(event) => setForm({ ...form, repeatRule: event.target.value })} placeholder="如 每天早上、每周一" />
             </div>
             <div className="space-y-2 md:col-span-4">
-              <Label>备注</Label>
-              <Textarea value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} />
+              <Label htmlFor="reminder-note">备注</Label>
+              <Textarea id="reminder-note" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} />
             </div>
             {error && <p className="text-sm text-destructive md:col-span-4">{error}</p>}
             <Button className="md:col-span-4" type="submit" disabled={saving}>
