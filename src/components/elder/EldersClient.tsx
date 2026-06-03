@@ -25,11 +25,16 @@ const genderLabels: Record<string, string> = {
 export function EldersClient({ familyId }: { familyId: string }) {
   const [elders, setElders] = useState<Elder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch(`/api/families/${familyId}/elders`)
-      .then((response) => response.json())
-      .then((result) => setElders(result.elders ?? []))
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "老人档案加载失败");
+        setElders(result.elders ?? []);
+      })
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "老人档案加载失败"))
       .finally(() => setLoading(false));
   }, [familyId]);
 
@@ -47,7 +52,9 @@ export function EldersClient({ familyId }: { familyId: string }) {
           </Link>
         </Button>
       </div>
-      {loading ? (
+      {error ? (
+        <p className="text-sm text-destructive">{error}</p>
+      ) : loading ? (
         <p className="text-sm text-muted-foreground">加载中...</p>
       ) : elders.length === 0 ? (
         <Card>
