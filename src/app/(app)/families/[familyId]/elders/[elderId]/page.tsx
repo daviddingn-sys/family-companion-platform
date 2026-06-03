@@ -9,6 +9,13 @@ import { getFamilyMembership } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
+const genderLabels: Record<string, string> = {
+  male: "男",
+  female: "女",
+  other: "其他",
+  unknown: "未填写",
+};
+
 export default async function ElderPage({
   params,
 }: {
@@ -36,7 +43,7 @@ export default async function ElderPage({
           <h1 className="text-2xl font-semibold">{elder.name}</h1>
           <p className="text-sm text-muted-foreground">老人档案详情</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button asChild variant="outline">
             <Link href={`/families/${familyId}/elders/${elderId}/blood-pressure`}>血压记录</Link>
           </Button>
@@ -65,7 +72,7 @@ export default async function ElderPage({
           <CardTitle>基础信息</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm md:grid-cols-2">
-          <p>性别：{elder.gender}</p>
+          <p>性别：{genderLabels[elder.gender] ?? elder.gender}</p>
           <p>出生日期：{elder.birth_date || "-"}</p>
           <p>手机号：{elder.phone || "-"}</p>
           <p>住址：{elder.address || "-"}</p>
@@ -74,19 +81,16 @@ export default async function ElderPage({
           <p className="md:col-span-2">健康备注：{elder.medical_notes || "-"}</p>
         </CardContent>
       </Card>
-      <Card className="rounded-lg border-dashed">
-        <CardContent className="py-5 text-sm text-muted-foreground">
-          血压记录模块已接入，并关联到该老人档案。
-        </CardContent>
-      </Card>
-      <Card className="rounded-lg border-destructive/30">
-        <CardHeader>
-          <CardTitle className="text-base">危险操作</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DeleteElderButton familyId={familyId} elderId={elderId} />
-        </CardContent>
-      </Card>
+      {(membership.role === "owner" || membership.role === "admin") && (
+        <Card className="rounded-lg border-destructive/30">
+          <CardHeader>
+            <CardTitle className="text-base">危险操作</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DeleteElderButton familyId={familyId} elderId={elderId} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
