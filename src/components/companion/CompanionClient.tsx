@@ -26,6 +26,7 @@ export function CompanionClient({
   const [messages, setMessages] = useState<CompanionMessage[]>([]);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
@@ -37,7 +38,16 @@ export function CompanionClient({
   const load = useCallback(() => {
     fetch(endpoint)
       .then((response) => response.json())
-      .then((result) => setMessages(result.messages ?? []))
+      .then((result) => {
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        setLoadError("");
+        setMessages(result.messages ?? []);
+      })
+      .catch((loadError: Error) => {
+        setLoadError(loadError.message || "陪伴对话加载失败");
+      })
       .finally(() => setLoading(false));
   }, [endpoint]);
 
@@ -86,6 +96,8 @@ export function CompanionClient({
           <div className="min-h-[360px] space-y-3 rounded-md border bg-muted/30 p-3">
             {loading ? (
               <p className="text-sm text-muted-foreground">加载中...</p>
+            ) : loadError ? (
+              <p className="text-sm text-destructive">{loadError}</p>
             ) : messages.length === 0 ? (
               <p className="text-sm text-muted-foreground">暂无对话，可以先问候一下或记录今天的身体感受。</p>
             ) : (
