@@ -57,6 +57,7 @@ function pass() {
   clearTimeout(timeout);
   stopChild();
   console.log(`Production health verified at ${baseUrl}/api/health`);
+  process.exit(0);
 }
 
 function fail(message) {
