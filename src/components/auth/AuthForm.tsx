@@ -18,12 +18,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const isLogin = mode === "login";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setSuccessMessage("");
     setLoading(true);
     const supabase = createSupabaseBrowserClient();
 
@@ -41,6 +43,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
     if (result.error) {
       setError(result.error.message);
+      return;
+    }
+
+    if (!isLogin && !result.data.session) {
+      setSuccessMessage("注册成功。请打开邮箱完成验证，验证后再返回登录。");
+      setPassword("");
       return;
     }
 
@@ -100,6 +108,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
+            {successMessage && <p className="text-sm text-emerald-700">{successMessage}</p>}
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? "处理中..." : isLogin ? "登录" : "注册"}
             </Button>
