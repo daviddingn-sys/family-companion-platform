@@ -130,6 +130,10 @@ export function RemindersClient({
   }
 
   async function remove(reminderId: string) {
+    if (!window.confirm("确定删除这条提醒事项吗？")) {
+      return;
+    }
+
     setError("");
     const response = await fetch(`${endpoint}/${reminderId}`, { method: "DELETE" });
     const result = await response.json();
