@@ -20,11 +20,23 @@ type FamilyMembership = {
 export function FamiliesClient() {
   const [families, setFamilies] = useState<FamilyMembership[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const roleLabels: Record<string, string> = {
+    owner: "所有者",
+    admin: "管理员",
+    member: "成员",
+    viewer: "只读",
+  };
 
   useEffect(() => {
     fetch("/api/families")
-      .then((response) => response.json())
-      .then((result) => setFamilies(result.families ?? []))
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "家庭列表加载失败");
+        setFamilies(result.families ?? []);
+      })
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "家庭列表加载失败"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,7 +54,9 @@ export function FamiliesClient() {
           </Link>
         </Button>
       </div>
-      {loading ? (
+      {error ? (
+        <p className="text-sm text-destructive">{error}</p>
+      ) : loading ? (
         <p className="text-sm text-muted-foreground">加载中...</p>
       ) : families.length === 0 ? (
         <Card>
@@ -60,7 +74,7 @@ export function FamiliesClient() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between gap-2 text-lg">
                   {item.families.name}
-                  <Badge variant="secondary">{item.role}</Badge>
+                  <Badge variant="secondary">{roleLabels[item.role] ?? item.role}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex gap-2">
