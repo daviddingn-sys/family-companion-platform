@@ -80,13 +80,13 @@ export function ElderForm({
             <Label>姓名</Label>
             <Input
               value={form.name}
-              onChange={(event) => setForm({ ...form, name: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               required
             />
           </div>
           <div className="space-y-2">
             <Label>性别</Label>
-            <Select value={form.gender} onValueChange={(gender) => setForm({ ...form, gender })}>
+            <Select value={form.gender} onValueChange={(gender) => setForm((current) => ({ ...current, gender }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -103,42 +103,42 @@ export function ElderForm({
             <Input
               type="date"
               value={form.birthDate}
-              onChange={(event) => setForm({ ...form, birthDate: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, birthDate: event.target.value }))}
             />
           </div>
           <div className="space-y-2">
             <Label>手机号</Label>
             <Input
               value={form.phone}
-              onChange={(event) => setForm({ ...form, phone: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
             />
           </div>
           <div className="space-y-2">
             <Label>紧急联系人</Label>
             <Input
               value={form.emergencyContactName}
-              onChange={(event) => setForm({ ...form, emergencyContactName: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, emergencyContactName: event.target.value }))}
             />
           </div>
           <div className="space-y-2">
             <Label>紧急联系人电话</Label>
             <Input
               value={form.emergencyContactPhone}
-              onChange={(event) => setForm({ ...form, emergencyContactPhone: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, emergencyContactPhone: event.target.value }))}
             />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>住址</Label>
             <Input
               value={form.address}
-              onChange={(event) => setForm({ ...form, address: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
             />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>健康备注</Label>
             <Textarea
               value={form.medicalNotes}
-              onChange={(event) => setForm({ ...form, medicalNotes: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, medicalNotes: event.target.value }))}
               placeholder="慢病、过敏、就医偏好等"
             />
           </div>
