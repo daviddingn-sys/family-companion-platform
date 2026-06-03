@@ -73,6 +73,7 @@ function pass() {
   clearTimeout(timeout);
   stopChild();
   console.log(`Auth config fallback verified at ${baseUrl}/login`);
+  process.exit(0);
 }
 
 function fail(message) {
