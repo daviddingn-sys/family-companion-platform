@@ -1,20 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { medicationSchema } from "@/lib/validators/medication";
-
-async function requireElderInFamily(familyId: string, elderId: string) {
-  const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("elders")
-    .select("id")
-    .eq("family_id", familyId)
-    .eq("id", elderId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return Boolean(data);
-}
 
 export async function GET(
   _request: NextRequest,
@@ -50,9 +37,8 @@ export async function POST(
   const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
   if (membership instanceof NextResponse) return membership;
 
-  if (!(await requireElderInFamily(familyId, elderId))) {
-    return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
-  }
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const body = await request.json().catch(() => null);
   const parsed = medicationSchema.safeParse(body);
