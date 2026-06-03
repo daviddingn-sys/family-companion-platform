@@ -165,6 +165,10 @@ export function BloodPressureClient({
   }
 
   async function remove(recordId: string) {
+    if (!window.confirm("确定删除这条血压记录吗？")) {
+      return;
+    }
+
     setError("");
     const response = await fetch(`${endpoint}/${recordId}`, { method: "DELETE" });
     const result = await response.json();
