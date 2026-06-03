@@ -3,6 +3,13 @@ import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/perm
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { reminderSchema } from "@/lib/validators/reminder";
 
+function parseDueAt(value?: string) {
+  const normalized = value?.trim().replace(" ", "T");
+  if (!normalized) return null;
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string }> },
@@ -52,7 +59,7 @@ export async function POST(
       elder_id: elderId,
       title: parsed.data.title,
       type: parsed.data.type,
-      due_at: parsed.data.dueAt ? new Date(parsed.data.dueAt).toISOString() : null,
+      due_at: parseDueAt(parsed.data.dueAt),
       repeat_rule: parsed.data.repeatRule || null,
       status: parsed.data.status,
       note: parsed.data.note || null,
