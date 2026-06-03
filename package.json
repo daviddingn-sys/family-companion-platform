@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "verify:auth-config": "node scripts/verify-auth-config.mjs",
+    "verify:production-health": "node scripts/verify-production-health.mjs",
     "verify:build": "pnpm verify:auth-config && pnpm typecheck && pnpm lint && pnpm build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
