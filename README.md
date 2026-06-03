@@ -16,7 +16,7 @@
 - 提醒事项模块（基础记录，不含后台推送调度）
 - 异常记录模块
 - 血压异常自动生成异常记录
-- 健康报告模块（规则化周报/月报生成，不含 AI 总结）
+- 健康报告模块（规则化周报/月报生成，支持 AI 健康总结和规则回退）
 - AI 健康总结基础接入（无 AI 密钥时自动回退为规则化总结）
 - 吾伴 AI 基础陪伴对话（老人维度消息历史、AI 回复、规则回退）
 - 工作台健康数据概览
@@ -65,6 +65,7 @@ pnpm typecheck
 pnpm lint
 pnpm build
 pnpm verify:auth-config
+pnpm verify:production-health
 pnpm verify:build
 pnpm db:generate
 pnpm db:migrate
