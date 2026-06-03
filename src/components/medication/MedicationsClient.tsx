@@ -150,7 +150,7 @@ export function MedicationsClient({
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold">{elderName}的用药记录</h1>
-        <p className="text-sm text-muted-foreground">记录药品、剂量、频次和当前状态；提醒调度下一阶段接入。</p>
+        <p className="text-sm text-muted-foreground">记录药品、剂量、频次和当前状态；可与提醒事项配合管理。</p>
       </div>
 
       <Card className="rounded-lg">
