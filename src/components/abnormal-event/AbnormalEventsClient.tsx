@@ -147,6 +147,10 @@ export function AbnormalEventsClient({
   }
 
   async function remove(eventId: string) {
+    if (!window.confirm("确定删除这条异常记录吗？")) {
+      return;
+    }
+
     setError("");
     const response = await fetch(`${endpoint}/${eventId}`, { method: "DELETE" });
     const result = await response.json();
