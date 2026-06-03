@@ -4,7 +4,7 @@ import {
   createBloodPressureImageKey,
   ensureBloodPressureImageBucket,
 } from "@/lib/blood-pressure-image";
-import { getRouteUser, requireFamilyRole } from "@/lib/permissions";
+import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -17,6 +17,9 @@ export async function POST(
 
   const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
   if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
 
   const formData = await request.formData();
   const file = formData.get("file");
