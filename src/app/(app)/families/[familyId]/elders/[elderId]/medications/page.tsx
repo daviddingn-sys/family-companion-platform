@@ -3,6 +3,7 @@ import { MedicationsClient } from "@/components/medication/MedicationsClient";
 import { requireUser } from "@/lib/auth";
 import { getFamilyMembership } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireSupabaseRow } from "@/lib/supabase/require-row";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +18,14 @@ export default async function ElderMedicationsPage({
   if (!membership) notFound();
 
   const admin = createSupabaseAdminClient();
-  const { data: elder } = await admin
-    .from("elders")
-    .select("id,name")
-    .eq("family_id", familyId)
-    .eq("id", elderId)
-    .single();
-
-  if (!elder) notFound();
+  const elder = requireSupabaseRow(
+    await admin
+      .from("elders")
+      .select("id,name")
+      .eq("family_id", familyId)
+      .eq("id", elderId)
+      .single(),
+  );
 
   return <MedicationsClient familyId={familyId} elderId={elderId} elderName={elder.name} />;
 }
