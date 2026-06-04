@@ -30,14 +30,7 @@ export async function GET(
 
   if (isNoRowsError(error)) return NextResponse.json({ error: "血压记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const abnormalEventResult = await syncBloodPressureAbnormalEvent(data);
-  return NextResponse.json({
-    record: data,
-    abnormalEventsCreated: abnormalEventResult.created,
-    abnormalEventsUpdated: abnormalEventResult.updated,
-    abnormalEventError: abnormalEventResult.error?.message ?? null,
-  });
+  return NextResponse.json({ record: data });
 }
 
 export async function PATCH(
@@ -83,7 +76,14 @@ export async function PATCH(
 
   if (isNoRowsError(error)) return NextResponse.json({ error: "血压记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ record: data });
+
+  const abnormalEventResult = await syncBloodPressureAbnormalEvent(data);
+  return NextResponse.json({
+    record: data,
+    abnormalEventsCreated: abnormalEventResult.created,
+    abnormalEventsUpdated: abnormalEventResult.updated,
+    abnormalEventError: abnormalEventResult.error?.message ?? null,
+  });
 }
 
 export async function DELETE(
