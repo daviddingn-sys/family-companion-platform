@@ -47,6 +47,10 @@ export async function POST(
     return NextResponse.json({ error: "请输入邮箱或手机号" }, { status: 400 });
   }
 
+  if (membership.role !== "owner" && parsed.data.role === "admin") {
+    return NextResponse.json({ error: "只有家庭所有者可以邀请管理员" }, { status: 403 });
+  }
+
   const admin = createSupabaseAdminClient();
   const email = parsed.data.email ? parsed.data.email.toLowerCase() : "";
   const duplicateFilters = [];
