@@ -39,6 +39,7 @@ export default async function DashboardPage() {
 
   const since30Days = new Date();
   since30Days.setDate(since30Days.getDate() - 30);
+  const now = new Date();
 
   const [
     { count: memberCount },
@@ -190,25 +191,30 @@ export default async function DashboardPage() {
         </Card>
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>近期提醒</CardTitle>
+            <CardTitle>待处理提醒</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {(upcomingReminders ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">暂无已设置时间的待处理提醒。</p>
             ) : (
-              (upcomingReminders ?? []).map((reminder) => (
-                <Link
-                  key={reminder.id}
-                  className="block rounded-md border p-3 text-sm hover:bg-accent"
-                  href={`/families/${reminder.family_id}/elders/${reminder.elder_id}/reminders`}
-                >
-                  <span className="font-medium">{reminder.title}</span>
-                  <span className="ml-2 text-muted-foreground">
-                    {reminderTypeLabels[reminder.type] ?? reminder.type} ·{" "}
-                    {reminder.due_at ? new Date(reminder.due_at).toLocaleString("zh-CN") : "未设置时间"}
-                  </span>
-                </Link>
-              ))
+              (upcomingReminders ?? []).map((reminder) => {
+                const dueAt = reminder.due_at ? new Date(reminder.due_at) : null;
+                const timingLabel = dueAt && dueAt < now ? "已过期" : "待处理";
+
+                return (
+                  <Link
+                    key={reminder.id}
+                    className="block rounded-md border p-3 text-sm hover:bg-accent"
+                    href={`/families/${reminder.family_id}/elders/${reminder.elder_id}/reminders`}
+                  >
+                    <span className="font-medium">{reminder.title}</span>
+                    <span className="ml-2 text-muted-foreground">
+                      {reminderTypeLabels[reminder.type] ?? reminder.type} · {timingLabel} ·{" "}
+                      {dueAt ? dueAt.toLocaleString("zh-CN") : "未设置时间"}
+                    </span>
+                  </Link>
+                );
+              })
             )}
           </CardContent>
         </Card>
