@@ -16,8 +16,7 @@
 - 提醒事项模块（CRUD、状态调整；当前不含后台推送调度）
 - 异常记录模块（CRUD、状态调整）
 - 血压异常自动生成异常记录
-- 健康报告模块（规则化周报/月报生成，支持 AI 健康总结和规则回退）
-- AI 健康总结基础接入（无 AI 密钥时自动回退为规则化总结）
+- 健康报告模块（规则化周报/月报生成、Markdown 下载）
 - 工作台健康数据概览
 - `/api/health` 部署健康检查
 
@@ -53,7 +52,7 @@ COZE_WORKLOAD_IDENTITY_API_KEY=
 
 可选：
 
-- `COZE_WORKLOAD_IDENTITY_API_KEY`：OCR 识别和 AI 健康总结需要；未配置时 AI 健康总结会回退为规则化总结。
+- `COZE_WORKLOAD_IDENTITY_API_KEY`：OCR 识别需要；未配置时 OCR 不可用。AI 健康总结属于后续阶段，当前 Web 端不开放入口。
 
 ## 开发命令
 
