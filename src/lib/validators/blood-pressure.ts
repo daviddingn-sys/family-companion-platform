@@ -23,6 +23,10 @@ export function getMonthRange(month: string) {
   }
 
   const [year, monthNumber] = month.split("-").map(Number);
+  if (monthNumber < 1 || monthNumber > 12) {
+    return null;
+  }
+
   const start = new Date(Date.UTC(year, monthNumber - 1, 1));
   const end = new Date(Date.UTC(year, monthNumber, 1));
 
