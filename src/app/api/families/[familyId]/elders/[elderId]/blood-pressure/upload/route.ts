@@ -41,10 +41,16 @@ export async function POST(
     return NextResponse.json({ error: "图片不能超过 8MB" }, { status: 400 });
   }
 
+  const key = createBloodPressureImageKey({ familyId, elderId, fileName: file.name });
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(await file.arrayBuffer());
+  } catch {
+    return NextResponse.json({ error: "图片读取失败，请重新选择图片" }, { status: 400 });
+  }
+
   await ensureBloodPressureImageBucket();
 
-  const key = createBloodPressureImageKey({ familyId, elderId, fileName: file.name });
-  const buffer = Buffer.from(await file.arrayBuffer());
   const admin = createSupabaseAdminClient();
   const { error } = await admin.storage
     .from(BLOOD_PRESSURE_IMAGE_BUCKET)
