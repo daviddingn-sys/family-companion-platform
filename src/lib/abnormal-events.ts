@@ -11,6 +11,44 @@ export type BloodPressureForAbnormalEvent = {
   pulse: number;
 };
 
+type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+export async function validateRelatedBloodPressureRecord({
+  admin,
+  familyId,
+  elderId,
+  recordId,
+}: {
+  admin: SupabaseAdminClient;
+  familyId: string;
+  elderId: string;
+  recordId?: string;
+}) {
+  if (!recordId) return { ok: true as const };
+
+  const { data, error } = await admin
+    .from("blood_pressure_records")
+    .select("id")
+    .eq("family_id", familyId)
+    .eq("elder_id", elderId)
+    .eq("id", recordId)
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false as const, status: 500, error: error.message };
+  }
+
+  if (!data) {
+    return {
+      ok: false as const,
+      status: 400,
+      error: "关联血压记录不存在或不属于当前老人档案",
+    };
+  }
+
+  return { ok: true as const };
+}
+
 function classifyBloodPressure(record: BloodPressureForAbnormalEvent) {
   if (record.systolic >= 180 || record.diastolic >= 120) {
     return {
