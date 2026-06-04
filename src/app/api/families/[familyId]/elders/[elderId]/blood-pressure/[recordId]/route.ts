@@ -101,6 +101,17 @@ export async function DELETE(
   if (elder instanceof NextResponse) return elder;
 
   const admin = createSupabaseAdminClient();
+  const { error: abnormalEventError } = await admin
+    .from("abnormal_events")
+    .delete()
+    .eq("family_id", familyId)
+    .eq("elder_id", elderId)
+    .eq("event_type", "blood_pressure")
+    .eq("related_blood_pressure_record_id", recordId);
+  if (abnormalEventError) {
+    return NextResponse.json({ error: abnormalEventError.message }, { status: 500 });
+  }
+
   const { error } = await admin
     .from("blood_pressure_records")
     .delete()
