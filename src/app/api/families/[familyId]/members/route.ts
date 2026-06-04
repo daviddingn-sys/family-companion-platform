@@ -72,6 +72,23 @@ export async function POST(
     }
   }
 
+  if (parsed.data.phone) {
+    const { data: activeMemberByPhone, error: activeMemberByPhoneError } = await admin
+      .from("family_members")
+      .select("id,profiles!inner(phone)")
+      .eq("family_id", familyId)
+      .neq("status", "removed")
+      .eq("profiles.phone", parsed.data.phone)
+      .maybeSingle();
+
+    if (activeMemberByPhoneError) {
+      return NextResponse.json({ error: activeMemberByPhoneError.message }, { status: 500 });
+    }
+    if (activeMemberByPhone) {
+      return NextResponse.json({ error: "该手机号对应的成员已在家庭中" }, { status: 409 });
+    }
+  }
+
   const { data, error } = await admin
     .from("family_members")
     .insert({
