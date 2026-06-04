@@ -6,6 +6,7 @@ import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/per
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const MAX_IMPORT_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMPORT_ROWS = 1000;
 const SUPPORTED_IMPORT_TYPES = new Set([
   "text/csv",
   "application/vnd.ms-excel",
@@ -46,7 +47,13 @@ export async function POST(
     return NextResponse.json({ error: "导入文件不能超过 5MB" }, { status: 400 });
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(await file.arrayBuffer());
+  } catch {
+    return NextResponse.json({ error: "文件读取失败，请重新选择文件" }, { status: 400 });
+  }
+
   let workbook: XLSX.WorkBook;
   try {
     workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
@@ -63,6 +70,9 @@ export async function POST(
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
   if (rows.length === 0) {
     return NextResponse.json({ error: "文件中没有可导入的数据" }, { status: 400 });
+  }
+  if (rows.length > MAX_IMPORT_ROWS) {
+    return NextResponse.json({ error: `单次最多导入 ${MAX_IMPORT_ROWS} 行，请拆分文件后重试` }, { status: 400 });
   }
 
   const parsedRows = parseBloodPressureRows(rows);
