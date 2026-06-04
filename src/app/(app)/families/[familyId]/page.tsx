@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getFamilyMembership } from "@/lib/permissions";
+import { requireSupabaseRow } from "@/lib/supabase/require-row";
 
 export const dynamic = "force-dynamic";
 
@@ -26,13 +27,13 @@ export default async function FamilyPage({
   if (!membership) notFound();
 
   const admin = createSupabaseAdminClient();
-  const [{ data: family }, { count: memberCount }, { count: elderCount }] = await Promise.all([
+  const [familyResult, { count: memberCount }, { count: elderCount }] = await Promise.all([
     admin.from("families").select("id,name,created_at").eq("id", familyId).single(),
     admin.from("family_members").select("*", { count: "exact", head: true }).eq("family_id", familyId).neq("status", "removed"),
     admin.from("elders").select("*", { count: "exact", head: true }).eq("family_id", familyId),
   ]);
 
-  if (!family) notFound();
+  const family = requireSupabaseRow(familyResult);
 
   return (
     <div className="space-y-6">
