@@ -23,12 +23,14 @@ const reminderTypeLabels: Record<string, string> = {
 export default async function DashboardPage() {
   const user = await requireUser();
   const admin = createSupabaseAdminClient();
-  const { data: memberships } = await admin
+  const { data: memberships, error: membershipsError } = await admin
     .from("family_members")
     .select("role,families(id,name)")
     .eq("user_id", user.id)
     .eq("status", "active")
     .order("created_at", { ascending: true });
+
+  if (membershipsError) throw membershipsError;
 
   const familyIds = (memberships ?? [])
     .map((item) => {
@@ -42,16 +44,16 @@ export default async function DashboardPage() {
   const now = new Date();
 
   const [
-    { count: memberCount },
-    { count: elderCount },
-    { count: bloodPressureCount },
-    { count: activeMedicationCount },
-    { count: openAbnormalCount },
-    { count: activeReminderCount },
-    { count: reportCount },
-    { data: elders },
-    { data: upcomingReminders },
-    { data: recentAbnormalEvents },
+    memberCountResult,
+    elderCountResult,
+    bloodPressureCountResult,
+    activeMedicationCountResult,
+    openAbnormalCountResult,
+    activeReminderCountResult,
+    reportCountResult,
+    eldersResult,
+    upcomingRemindersResult,
+    recentAbnormalEventsResult,
   ] = await Promise.all([
     familyIds.length
       ? admin.from("family_members").select("*", { count: "exact", head: true }).in("family_id", familyIds).neq("status", "removed")
@@ -91,6 +93,33 @@ export default async function DashboardPage() {
       ? admin.from("abnormal_events").select("id,title,severity,occurred_at,family_id,elder_id").in("family_id", familyIds).order("occurred_at", { ascending: false }).limit(5)
       : Promise.resolve({ data: [] }),
   ]);
+  const dashboardResults = [
+    memberCountResult,
+    elderCountResult,
+    bloodPressureCountResult,
+    activeMedicationCountResult,
+    openAbnormalCountResult,
+    activeReminderCountResult,
+    reportCountResult,
+    eldersResult,
+    upcomingRemindersResult,
+    recentAbnormalEventsResult,
+  ];
+
+  for (const result of dashboardResults) {
+    if ("error" in result && result.error) throw result.error;
+  }
+
+  const memberCount = memberCountResult.count ?? 0;
+  const elderCount = elderCountResult.count ?? 0;
+  const bloodPressureCount = bloodPressureCountResult.count ?? 0;
+  const activeMedicationCount = activeMedicationCountResult.count ?? 0;
+  const openAbnormalCount = openAbnormalCountResult.count ?? 0;
+  const activeReminderCount = activeReminderCountResult.count ?? 0;
+  const reportCount = reportCountResult.count ?? 0;
+  const elders = eldersResult.data ?? [];
+  const upcomingReminders = upcomingRemindersResult.data ?? [];
+  const recentAbnormalEvents = recentAbnormalEventsResult.data ?? [];
 
   return (
     <div className="space-y-6">
