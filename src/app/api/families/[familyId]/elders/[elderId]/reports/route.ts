@@ -158,6 +158,21 @@ export async function POST(
   const endAt = endExclusive(periodEnd);
   const admin = createSupabaseAdminClient();
 
+  const { data: existingReport, error: existingReportError } = await admin
+    .from("health_reports")
+    .select("id")
+    .eq("family_id", familyId)
+    .eq("elder_id", elderId)
+    .eq("period_type", periodType)
+    .eq("period_start", periodStart)
+    .eq("period_end", periodEnd)
+    .maybeSingle();
+
+  if (existingReportError) return NextResponse.json({ error: existingReportError.message }, { status: 500 });
+  if (existingReport) {
+    return NextResponse.json({ error: "该周期健康报告已存在，请先删除原报告后重新生成" }, { status: 409 });
+  }
+
   const [
     bloodPressureResult,
     medicationResult,
