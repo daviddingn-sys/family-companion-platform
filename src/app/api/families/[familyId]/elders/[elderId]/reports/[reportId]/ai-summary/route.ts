@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateAiHealthSummary } from "@/lib/ai-health-summary";
 import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 
 export async function POST(
   _request: NextRequest,
@@ -26,6 +27,7 @@ export async function POST(
     .eq("id", reportId)
     .single();
 
+  if (isNoRowsError(reportError)) return NextResponse.json({ error: "健康报告不存在" }, { status: 404 });
   if (reportError) return NextResponse.json({ error: reportError.message }, { status: 500 });
   if (!report) return NextResponse.json({ error: "报告不存在" }, { status: 404 });
 
