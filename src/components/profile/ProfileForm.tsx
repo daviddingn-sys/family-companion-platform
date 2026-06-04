@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { requestJson } from "@/lib/client-http";
 
 type Profile = {
   display_name: string | null;
@@ -28,16 +29,15 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     setError("");
     setLoading(true);
 
-    const response = await fetch("/api/profiles", {
+    const result = await requestJson("/api/profiles", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    const result = await response.json();
     setLoading(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "保存失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
