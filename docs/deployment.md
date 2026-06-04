@@ -31,7 +31,7 @@ COZE_WORKLOAD_IDENTITY_API_KEY=
 - `DATABASE_URL`：Supabase 项目顶部 `Connect` -> `Connection string`，选择 Transaction pooler 或 Session pooler 的 Postgres URL，并填入数据库密码。
 - `COZE_WORKLOAD_IDENTITY_API_KEY`：Coze 工作区的 API key。第一阶段可留空。
 
-`COZE_WORKLOAD_IDENTITY_API_KEY` 影响 OCR 和 AI 健康总结。未配置时，OCR 不可用，AI 健康总结会回退为规则化总结，平台其他模块仍可运行。
+`COZE_WORKLOAD_IDENTITY_API_KEY` 影响 OCR。未配置时，OCR 不可用，平台其他模块仍可运行。AI 健康总结属于后续阶段，当前 Web 端不开放入口。
 
 ## 3. 数据库迁移
 
@@ -136,5 +136,5 @@ pnpm verify:build
 - 新增提醒事项
 - 新增异常记录
 - 生成健康周报或月报
-- 为健康报告生成 AI 健康总结
+- 下载健康报告 Markdown
 - 打开工作台确认统计数据变化
