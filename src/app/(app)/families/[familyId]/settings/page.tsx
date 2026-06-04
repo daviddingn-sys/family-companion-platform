@@ -4,6 +4,7 @@ import { FamilyForm } from "@/components/family/FamilyForm";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getFamilyMembership } from "@/lib/permissions";
+import { requireSupabaseRow } from "@/lib/supabase/require-row";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,9 @@ export default async function FamilySettingsPage({
   if (!membership) notFound();
 
   const admin = createSupabaseAdminClient();
-  const { data: family } = await admin.from("families").select("id,name").eq("id", familyId).single();
-  if (!family) notFound();
+  const family = requireSupabaseRow(
+    await admin.from("families").select("id,name").eq("id", familyId).single(),
+  );
 
   return (
     <Card className="max-w-xl rounded-lg">
