@@ -85,8 +85,11 @@ export async function DELETE(
     .from("elders")
     .delete()
     .eq("family_id", familyId)
-    .eq("id", elderId);
+    .eq("id", elderId)
+    .select("id")
+    .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
