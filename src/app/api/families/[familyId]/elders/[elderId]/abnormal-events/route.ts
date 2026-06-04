@@ -3,6 +3,38 @@ import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyR
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { abnormalEventSchema } from "@/lib/validators/abnormal-event";
 
+async function validateRelatedBloodPressureRecord({
+  admin,
+  familyId,
+  elderId,
+  recordId,
+}: {
+  admin: ReturnType<typeof createSupabaseAdminClient>;
+  familyId: string;
+  elderId: string;
+  recordId?: string;
+}) {
+  if (!recordId) return null;
+
+  const { data, error } = await admin
+    .from("blood_pressure_records")
+    .select("id")
+    .eq("family_id", familyId)
+    .eq("elder_id", elderId)
+    .eq("id", recordId)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "关联血压记录不存在或不属于当前老人档案" }, { status: 400 });
+  }
+
+  return null;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string }> },
@@ -48,6 +80,14 @@ export async function POST(
   }
 
   const admin = createSupabaseAdminClient();
+  const relatedRecordError = await validateRelatedBloodPressureRecord({
+    admin,
+    familyId,
+    elderId,
+    recordId: parsed.data.relatedBloodPressureRecordId,
+  });
+  if (relatedRecordError) return relatedRecordError;
+
   const { data, error } = await admin
     .from("abnormal_events")
     .insert({
