@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { requestJson } from "@/lib/client-http";
 
 type HealthReport = {
   id: string;
@@ -36,6 +37,10 @@ type HealthReport = {
     };
   };
   created_at: string;
+};
+
+type HealthReportsResponse = {
+  reports: HealthReport[];
 };
 
 function toDateInputValue(date: Date) {
@@ -84,19 +89,18 @@ export function HealthReportsClient({
   );
 
   const load = useCallback(() => {
-    fetch(endpoint)
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.error) {
-          throw new Error(result.error);
-        }
+    async function run() {
+      const result = await requestJson<HealthReportsResponse>(endpoint);
+      if (result.ok) {
         setLoadError("");
-        setReports(result.reports ?? []);
-      })
-      .catch((loadError: Error) => {
-        setLoadError(loadError.message || "健康报告加载失败");
-      })
-      .finally(() => setLoading(false));
+        setReports(result.data.reports ?? []);
+      } else {
+        setLoadError(result.error);
+      }
+      setLoading(false);
+    }
+
+    run();
   }, [endpoint]);
 
   useEffect(() => {
@@ -111,16 +115,15 @@ export function HealthReportsClient({
     event.preventDefault();
     setError("");
     setSaving(true);
-    const response = await fetch(endpoint, {
+    const result = await requestJson(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    const result = await response.json();
     setSaving(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "生成失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
@@ -132,10 +135,9 @@ export function HealthReportsClient({
     }
 
     setError("");
-    const response = await fetch(`${endpoint}/${reportId}`, { method: "DELETE" });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error ?? "删除失败");
+    const result = await requestJson(`${endpoint}/${reportId}`, { method: "DELETE" });
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
