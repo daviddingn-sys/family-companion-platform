@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requestJson } from "@/lib/client-http";
 
 type Elder = {
   id: string;
@@ -13,6 +14,10 @@ type Elder = {
   birth_date: string | null;
   phone: string | null;
   medical_notes: string | null;
+};
+
+type EldersResponse = {
+  elders: Elder[];
 };
 
 const genderLabels: Record<string, string> = {
@@ -28,14 +33,17 @@ export function EldersClient({ familyId }: { familyId: string }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/families/${familyId}/elders`)
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "老人档案加载失败");
-        setElders(result.elders ?? []);
-      })
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "老人档案加载失败"))
-      .finally(() => setLoading(false));
+    async function load() {
+      const result = await requestJson<EldersResponse>(`/api/families/${familyId}/elders`);
+      if (result.ok) {
+        setElders(result.data.elders ?? []);
+      } else {
+        setError(result.error);
+      }
+      setLoading(false);
+    }
+
+    load();
   }, [familyId]);
 
   return (
