@@ -6,6 +6,7 @@ import { DeleteElderButton } from "@/components/elder/DeleteElderButton";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getFamilyMembership } from "@/lib/permissions";
+import { requireSupabaseRow } from "@/lib/supabase/require-row";
 
 export const dynamic = "force-dynamic";
 
@@ -27,14 +28,14 @@ export default async function ElderPage({
   if (!membership) notFound();
 
   const admin = createSupabaseAdminClient();
-  const { data: elder } = await admin
-    .from("elders")
-    .select("*")
-    .eq("family_id", familyId)
-    .eq("id", elderId)
-    .single();
-
-  if (!elder) notFound();
+  const elder = requireSupabaseRow(
+    await admin
+      .from("elders")
+      .select("*")
+      .eq("family_id", familyId)
+      .eq("id", elderId)
+      .single(),
+  );
 
   return (
     <div className="space-y-4">
