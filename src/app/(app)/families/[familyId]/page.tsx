@@ -27,13 +27,15 @@ export default async function FamilyPage({
   if (!membership) notFound();
 
   const admin = createSupabaseAdminClient();
-  const [familyResult, { count: memberCount }, { count: elderCount }] = await Promise.all([
+  const [familyResult, memberCountResult, elderCountResult] = await Promise.all([
     admin.from("families").select("id,name,created_at").eq("id", familyId).single(),
     admin.from("family_members").select("*", { count: "exact", head: true }).eq("family_id", familyId).neq("status", "removed"),
     admin.from("elders").select("*", { count: "exact", head: true }).eq("family_id", familyId),
   ]);
 
   const family = requireSupabaseRow(familyResult);
+  if (memberCountResult.error) throw memberCountResult.error;
+  if (elderCountResult.error) throw elderCountResult.error;
 
   return (
     <div className="space-y-6">
@@ -52,7 +54,7 @@ export default async function FamilyPage({
             <CardTitle>家庭成员</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-3xl font-semibold">{memberCount ?? 0}</p>
+            <p className="text-3xl font-semibold">{memberCountResult.count ?? 0}</p>
             <Button asChild>
               <Link href={`/families/${familyId}/members`}>管理成员</Link>
             </Button>
@@ -63,7 +65,7 @@ export default async function FamilyPage({
             <CardTitle>老人档案</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-3xl font-semibold">{elderCount ?? 0}</p>
+            <p className="text-3xl font-semibold">{elderCountResult.count ?? 0}</p>
             <Button asChild>
               <Link href={`/families/${familyId}/elders`}>管理档案</Link>
             </Button>
