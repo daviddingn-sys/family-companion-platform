@@ -1,10 +1,17 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle, Pencil, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,6 +62,18 @@ function toLocalInputValue(value: string) {
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
 }
 
+function emptyAbnormalEventForm() {
+  return {
+    title: "",
+    eventType: "blood_pressure",
+    severity: "medium",
+    occurredAt: nowLocalInputValue(),
+    status: "open",
+    description: "",
+    relatedBloodPressureRecordId: "",
+  };
+}
+
 export function AbnormalEventsClient({
   familyId,
   elderId,
@@ -69,15 +88,11 @@ export function AbnormalEventsClient({
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    eventType: "blood_pressure",
-    severity: "medium",
-    occurredAt: nowLocalInputValue(),
-    status: "open",
-    description: "",
-    relatedBloodPressureRecordId: "",
-  });
+  const [editingEvent, setEditingEvent] = useState<AbnormalEvent | null>(null);
+  const [editError, setEditError] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [form, setForm] = useState(emptyAbnormalEventForm);
+  const [editForm, setEditForm] = useState(emptyAbnormalEventForm);
 
   const endpoint = useMemo(
     () => `/api/families/${familyId}/elders/${elderId}/abnormal-events`,
@@ -121,15 +136,44 @@ export function AbnormalEventsClient({
       return;
     }
 
-    setForm({
-      title: "",
-      eventType: "blood_pressure",
-      severity: "medium",
-      occurredAt: nowLocalInputValue(),
-      status: "open",
-      description: "",
-      relatedBloodPressureRecordId: "",
+    setForm(emptyAbnormalEventForm());
+    load();
+  }
+
+  function startEdit(abnormalEvent: AbnormalEvent) {
+    setEditError("");
+    setEditingEvent(abnormalEvent);
+    setEditForm({
+      title: abnormalEvent.title,
+      eventType: abnormalEvent.event_type,
+      severity: abnormalEvent.severity,
+      occurredAt: toLocalInputValue(abnormalEvent.occurred_at),
+      status: abnormalEvent.status,
+      description: abnormalEvent.description ?? "",
+      relatedBloodPressureRecordId: abnormalEvent.related_blood_pressure_record_id ?? "",
     });
+  }
+
+  async function updateEvent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingEvent) return;
+
+    setEditError("");
+    setUpdating(true);
+    const response = await fetch(`${endpoint}/${editingEvent.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editForm),
+    });
+    const result = await response.json();
+    setUpdating(false);
+
+    if (!response.ok) {
+      setEditError(result.error ?? "更新失败");
+      return;
+    }
+
+    setEditingEvent(null);
     load();
   }
 
@@ -311,14 +355,123 @@ export function AbnormalEventsClient({
                     <SelectItem value="resolved">已解决</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" onClick={() => remove(abnormalEvent.id)}>
-                  删除
-                </Button>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Button variant="outline" size="sm" onClick={() => startEdit(abnormalEvent)}>
+                    <Pencil className="size-4" />
+                    编辑
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => remove(abnormalEvent.id)}>
+                    删除
+                  </Button>
+                </div>
               </div>
             ))
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(editingEvent)} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>编辑异常记录</DialogTitle>
+          </DialogHeader>
+          <form className="grid gap-3 md:grid-cols-2" onSubmit={updateEvent}>
+            <div className="space-y-2 md:col-span-2">
+              <Label>标题</Label>
+              <Input
+                value={editForm.title}
+                onChange={(event) => setEditForm((current) => ({ ...current, title: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>类型</Label>
+              <Select
+                value={editForm.eventType}
+                onValueChange={(eventType) => setEditForm((current) => ({ ...current, eventType }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="blood_pressure">血压异常</SelectItem>
+                  <SelectItem value="medication">用药异常</SelectItem>
+                  <SelectItem value="fall">跌倒</SelectItem>
+                  <SelectItem value="symptom">症状</SelectItem>
+                  <SelectItem value="other">其他</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>严重程度</Label>
+              <Select
+                value={editForm.severity}
+                onValueChange={(severity) => setEditForm((current) => ({ ...current, severity }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">低</SelectItem>
+                  <SelectItem value="medium">中</SelectItem>
+                  <SelectItem value="high">高</SelectItem>
+                  <SelectItem value="critical">紧急</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>发生时间</Label>
+              <Input
+                type="datetime-local"
+                value={editForm.occurredAt}
+                onChange={(event) => setEditForm((current) => ({ ...current, occurredAt: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>处理状态</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(status) => setEditForm((current) => ({ ...current, status }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="open">待处理</SelectItem>
+                  <SelectItem value="monitoring">观察中</SelectItem>
+                  <SelectItem value="resolved">已解决</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>关联血压记录 ID</Label>
+              <Input
+                value={editForm.relatedBloodPressureRecordId}
+                onChange={(event) =>
+                  setEditForm((current) => ({ ...current, relatedBloodPressureRecordId: event.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>说明</Label>
+              <Textarea
+                value={editForm.description}
+                onChange={(event) => setEditForm((current) => ({ ...current, description: event.target.value }))}
+              />
+            </div>
+            {editError && <p className="text-sm text-destructive md:col-span-2">{editError}</p>}
+            <DialogFooter className="md:col-span-2">
+              <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updating}>
+                {updating ? "保存中..." : "保存修改"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
