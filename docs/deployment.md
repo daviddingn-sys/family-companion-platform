@@ -53,7 +53,6 @@ pnpm db:migrate
 - `reminders`
 - `abnormal_events`
 - `health_reports`
-- `companion_messages`
 
 迁移文件同时包含 RLS 策略。上线后不要在 Supabase 控制台手工关闭 RLS。
 
@@ -138,5 +137,4 @@ pnpm verify:build
 - 新增异常记录
 - 生成健康周报或月报
 - 为健康报告生成 AI 健康总结
-- 打开吾伴 AI 并发送一条陪伴消息
 - 打开工作台确认统计数据变化
