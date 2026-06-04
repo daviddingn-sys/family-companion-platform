@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { requestJson } from "@/lib/client-http";
+
+type FamilyResponse = {
+  family?: {
+    id: string;
+  };
+};
 
 export function FamilyForm({
   familyId,
@@ -23,20 +30,19 @@ export function FamilyForm({
     setLoading(true);
     setError("");
 
-    const response = await fetch(familyId ? `/api/families/${familyId}` : "/api/families", {
+    const result = await requestJson<FamilyResponse>(familyId ? `/api/families/${familyId}` : "/api/families", {
       method: familyId ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
-    const result = await response.json();
     setLoading(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "保存失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    const nextFamilyId = familyId ?? result.family?.id;
+    const nextFamilyId = familyId ?? result.data.family?.id;
     router.push(nextFamilyId ? `/families/${nextFamilyId}` : "/families");
     router.refresh();
   }
