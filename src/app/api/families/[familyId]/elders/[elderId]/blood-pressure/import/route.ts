@@ -26,7 +26,11 @@ export async function POST(
   const elder = await requireElderInFamily(familyId, elderId);
   if (elder instanceof NextResponse) return elder;
 
-  const formData = await request.formData();
+  const formData = await request.formData().catch(() => null);
+  if (!formData) {
+    return NextResponse.json({ error: "上传表单数据无效" }, { status: 400 });
+  }
+
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "请上传文件" }, { status: 400 });
