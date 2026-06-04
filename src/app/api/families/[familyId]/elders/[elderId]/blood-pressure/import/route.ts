@@ -43,9 +43,24 @@ export async function POST(
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  let workbook: XLSX.WorkBook;
+  try {
+    workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
+  } catch {
+    return NextResponse.json({ error: "文件解析失败，请确认文件为有效的 CSV、XLS 或 XLSX" }, { status: 400 });
+  }
+
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) {
+    return NextResponse.json({ error: "文件中没有可导入的工作表" }, { status: 400 });
+  }
+
+  const sheet = workbook.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+  if (rows.length === 0) {
+    return NextResponse.json({ error: "文件中没有可导入的数据" }, { status: 400 });
+  }
+
   const parsedRows = parseBloodPressureRows(rows);
   const validRows = parsedRows.filter((row) => row.valid && row.data);
   const invalidRows = parsedRows.filter((row) => !row.valid);
