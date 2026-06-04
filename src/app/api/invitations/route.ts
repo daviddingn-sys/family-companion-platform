@@ -10,8 +10,7 @@ const acceptInvitationSchema = z.object({
 
 async function getCurrentProfilePhone(userId: string) {
   const admin = createSupabaseAdminClient();
-  const { data } = await admin.from("profiles").select("phone").eq("id", userId).maybeSingle();
-  return data?.phone ?? null;
+  return admin.from("profiles").select("phone").eq("id", userId).maybeSingle();
 }
 
 export async function GET() {
@@ -19,7 +18,10 @@ export async function GET() {
   if (user instanceof NextResponse) return user;
 
   const email = user.email?.toLowerCase() ?? "";
-  const phone = await getCurrentProfilePhone(user.id);
+  const { data: profile, error: profileError } = await getCurrentProfilePhone(user.id);
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+
+  const phone = profile?.phone ?? null;
   const filters = email ? [`invited_email.eq.${email}`] : [];
   if (phone) filters.push(`invited_phone.eq.${phone}`);
 
@@ -50,7 +52,10 @@ export async function POST(request: NextRequest) {
   }
 
   const email = user.email?.toLowerCase() ?? "";
-  const phone = await getCurrentProfilePhone(user.id);
+  const { data: profile, error: profileError } = await getCurrentProfilePhone(user.id);
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+
+  const phone = profile?.phone ?? null;
   const admin = createSupabaseAdminClient();
   const { data: invitation, error: invitationError } = await admin
     .from("family_members")
@@ -70,7 +75,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "当前账号与邀请信息不匹配" }, { status: 403 });
   }
 
-  const { data: existing } = await admin
+  const { data: existing, error: existingError } = await admin
     .from("family_members")
     .select("id,status")
     .eq("family_id", invitation.family_id)
@@ -78,6 +83,7 @@ export async function POST(request: NextRequest) {
     .neq("status", "removed")
     .maybeSingle();
 
+  if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
   if (existing) {
     return NextResponse.json({ error: "你已经是该家庭成员" }, { status: 409 });
   }
