@@ -11,7 +11,7 @@ export async function getRouteUser(): Promise<User | NextResponse> {
   if (missingEnv.length > 0) {
     return NextResponse.json(
       {
-        error: "Supabase is not configured.",
+        error: "Supabase 尚未配置。",
         status: "missing_required_env",
         missingRequiredEnv: missingEnv,
       },
@@ -26,7 +26,7 @@ export async function getRouteUser(): Promise<User | NextResponse> {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    return NextResponse.json({ error: "请先登录。" }, { status: 401 });
   }
 
   return user;
@@ -68,7 +68,7 @@ export async function getFamilyMembership(familyId: string, userId: string) {
 export async function requireFamilyMember(familyId: string, userId: string) {
   const membership = await getFamilyMembership(familyId, userId);
   if (!membership) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+    return NextResponse.json({ error: "没有访问该家庭的权限。" }, { status: 403 });
   }
 
   return membership;
@@ -81,7 +81,7 @@ export async function requireFamilyRole(
 ) {
   const membership = await getFamilyMembership(familyId, userId);
   if (!membership || !allowedRoles.includes(membership.role)) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+    return NextResponse.json({ error: "当前角色没有执行该操作的权限。" }, { status: 403 });
   }
 
   return membership;
