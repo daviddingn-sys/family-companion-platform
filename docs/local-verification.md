@@ -44,7 +44,7 @@ Supabase 中的对应位置：
 - Service role key：`Settings` -> `API Keys` -> Secret key。
 - Database URL：项目顶部 `Connect` -> `Connection string`，选择 pooler 连接串并填入数据库密码。
 
-`COZE_WORKLOAD_IDENTITY_API_KEY` 可选。未配置时 OCR 不可用，AI 健康总结和吾伴 AI 会使用规则回退。
+`COZE_WORKLOAD_IDENTITY_API_KEY` 可选。未配置时 OCR 不可用，AI 健康总结会使用规则回退。
 
 ## 2. 初始化数据库
 
@@ -96,7 +96,6 @@ http://localhost:3100/api/health
 - 新增提醒事项
 - 生成健康周报或月报
 - 为报告生成 AI 健康总结
-- 打开吾伴 AI，发送一条陪伴消息
 - 邀请家庭成员
 - 用匹配邮箱或手机号的账号接受邀请
 
