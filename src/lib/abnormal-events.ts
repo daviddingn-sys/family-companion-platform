@@ -112,3 +112,47 @@ export async function createBloodPressureAbnormalEvents(records: BloodPressureFo
   const { error } = await admin.from("abnormal_events").insert(events);
   return { created: error ? 0 : events.length, error };
 }
+
+export async function syncBloodPressureAbnormalEvent(record: BloodPressureForAbnormalEvent) {
+  const classification = classifyBloodPressure(record);
+  if (!classification) return { created: 0, updated: 0, error: null };
+
+  const admin = createSupabaseAdminClient();
+  const { data: existing, error: existingError } = await admin
+    .from("abnormal_events")
+    .select("id")
+    .eq("family_id", record.family_id)
+    .eq("elder_id", record.elder_id)
+    .eq("event_type", "blood_pressure")
+    .eq("related_blood_pressure_record_id", record.id)
+    .maybeSingle();
+
+  if (existingError) return { created: 0, updated: 0, error: existingError };
+
+  const eventData = {
+    family_id: record.family_id,
+    elder_id: record.elder_id,
+    title: classification.title,
+    event_type: "blood_pressure",
+    severity: classification.severity,
+    occurred_at: record.measured_at,
+    description: classification.description,
+    related_blood_pressure_record_id: record.id,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (existing) {
+    const { error } = await admin
+      .from("abnormal_events")
+      .update(eventData)
+      .eq("id", existing.id);
+    return { created: 0, updated: error ? 0 : 1, error };
+  }
+
+  const { error } = await admin.from("abnormal_events").insert({
+    ...eventData,
+    status: "open",
+    created_by: record.recorded_by,
+  });
+  return { created: error ? 0 : 1, updated: 0, error };
+}
