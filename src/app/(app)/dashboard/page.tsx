@@ -37,6 +37,7 @@ export default async function DashboardPage() {
     { count: memberCount },
     { count: elderCount },
     { count: bloodPressureCount },
+    { count: activeMedicationCount },
     { count: openAbnormalCount },
     { count: activeReminderCount },
     { count: reportCount },
@@ -51,6 +52,9 @@ export default async function DashboardPage() {
       : Promise.resolve({ count: 0 }),
     familyIds.length
       ? admin.from("blood_pressure_records").select("*", { count: "exact", head: true }).in("family_id", familyIds).gte("measured_at", since30Days.toISOString())
+      : Promise.resolve({ count: 0 }),
+    familyIds.length
+      ? admin.from("medications").select("*", { count: "exact", head: true }).in("family_id", familyIds).eq("status", "active")
       : Promise.resolve({ count: 0 }),
     familyIds.length
       ? admin.from("abnormal_events").select("*", { count: "exact", head: true }).in("family_id", familyIds).neq("status", "resolved")
@@ -95,12 +99,18 @@ export default async function DashboardPage() {
           <CardContent className="text-3xl font-semibold">{elderCount ?? 0}</CardContent>
         </Card>
       </div>
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
         <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground">近 30 天血压</CardTitle>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">{bloodPressureCount ?? 0}</CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">使用中用药</CardTitle>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold">{activeMedicationCount ?? 0}</CardContent>
         </Card>
         <Card className="rounded-lg">
           <CardHeader>
