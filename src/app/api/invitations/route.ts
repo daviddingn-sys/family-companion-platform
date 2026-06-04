@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getRouteUser } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 
 const acceptInvitationSchema = z.object({
   memberId: z.string().uuid("邀请 ID 格式不正确"),
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     .eq("id", parsed.data.memberId)
     .single();
 
+  if (isNoRowsError(invitationError)) return NextResponse.json({ error: "邀请不存在或已处理" }, { status: 404 });
   if (invitationError) return NextResponse.json({ error: invitationError.message }, { status: 500 });
   if (!invitation || invitation.status !== "invited") {
     return NextResponse.json({ error: "邀请不存在或已处理" }, { status: 404 });
