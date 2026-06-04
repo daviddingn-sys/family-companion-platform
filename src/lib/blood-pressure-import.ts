@@ -31,6 +31,26 @@ function findColumn(columns: string[], names: string[]) {
   return names.find((name) => columns.includes(name)) ?? null;
 }
 
+function createStrictDate(year: number, month: number, day: number, hours = 0, minutes = 0, seconds = 0) {
+  if (month < 1 || month > 12 || day < 1 || hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day, hours, minutes, seconds, 0);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day ||
+    date.getHours() !== hours ||
+    date.getMinutes() !== minutes ||
+    date.getSeconds() !== seconds
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
 function normalizeDate(value: unknown) {
   if (value == null || value === "") return null;
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -40,6 +60,18 @@ function normalizeDate(value: unknown) {
   }
 
   const text = String(value).trim().replace(/\//g, "-");
+  const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+  if (match) {
+    return createStrictDate(
+      Number(match[1]),
+      Number(match[2]),
+      Number(match[3]),
+      match[4] ? Number(match[4]) : 0,
+      match[5] ? Number(match[5]) : 0,
+      match[6] ? Number(match[6]) : 0,
+    );
+  }
+
   const parsed = new Date(text);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
@@ -48,6 +80,7 @@ function normalizeTime(value: unknown) {
   if (value == null || value === "") return { hours: 8, minutes: 0 };
   if (typeof value === "number") {
     const totalMinutes = Math.round(value * 24 * 60);
+    if (totalMinutes < 0 || totalMinutes >= 24 * 60) return null;
     return {
       hours: Math.floor(totalMinutes / 60),
       minutes: totalMinutes % 60,
@@ -55,10 +88,14 @@ function normalizeTime(value: unknown) {
   }
 
   const match = String(value).trim().match(/(\d{1,2}):(\d{1,2})/);
-  if (!match) return { hours: 8, minutes: 0 };
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
   return {
-    hours: Number(match[1]),
-    minutes: Number(match[2]),
+    hours,
+    minutes,
   };
 }
 
@@ -106,6 +143,10 @@ export function parseBloodPressureRows(rows: RawRow[]): ParsedBloodPressureRow[]
 
     if (!colMeasuredAt) {
       const time = normalizeTime(colTime ? row[colTime] : null);
+      if (!time) {
+        return { rowNumber: index + 2, valid: false, error: "时间无法识别" };
+      }
+
       measuredDate.setHours(time.hours, time.minutes, 0, 0);
     }
 
