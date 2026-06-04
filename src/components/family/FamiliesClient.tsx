@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requestJson } from "@/lib/client-http";
 
 type FamilyMembership = {
   role: string;
@@ -15,6 +16,10 @@ type FamilyMembership = {
     owner_user_id: string;
     created_at: string;
   };
+};
+
+type FamiliesResponse = {
+  families: FamilyMembership[];
 };
 
 export function FamiliesClient() {
@@ -30,14 +35,17 @@ export function FamiliesClient() {
   };
 
   useEffect(() => {
-    fetch("/api/families")
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "家庭列表加载失败");
-        setFamilies(result.families ?? []);
-      })
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "家庭列表加载失败"))
-      .finally(() => setLoading(false));
+    async function load() {
+      const result = await requestJson<FamiliesResponse>("/api/families");
+      if (result.ok) {
+        setFamilies(result.data.families ?? []);
+      } else {
+        setError(result.error);
+      }
+      setLoading(false);
+    }
+
+    load();
   }, []);
 
   return (
