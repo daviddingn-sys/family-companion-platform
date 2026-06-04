@@ -25,6 +25,9 @@ type HealthReport = {
       avgDiastolic?: number | null;
       avgPulse?: number | null;
     };
+    medications?: {
+      activeCount?: number;
+    };
     reminders?: {
       count?: number;
     };
@@ -243,11 +246,13 @@ export function HealthReportsClient({
                     </Button>
                   </div>
                 </div>
-                <div className="grid gap-2 text-sm md:grid-cols-3">
+                <div className="grid gap-2 text-sm md:grid-cols-5">
                   <div className="rounded-md bg-muted p-3">血压记录：{report.stats.bloodPressure?.count ?? 0} 次</div>
                   <div className="rounded-md bg-muted p-3">
                     平均血压：{report.stats.bloodPressure?.avgSystolic ?? "-"} / {report.stats.bloodPressure?.avgDiastolic ?? "-"}
                   </div>
+                  <div className="rounded-md bg-muted p-3">用药方案：{report.stats.medications?.activeCount ?? 0} 项</div>
+                  <div className="rounded-md bg-muted p-3">提醒事项：{report.stats.reminders?.count ?? 0} 项</div>
                   <div className="rounded-md bg-muted p-3">异常记录：{report.stats.abnormalEvents?.count ?? 0} 条</div>
                 </div>
                 <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-sm font-sans leading-6">{report.summary}</pre>
