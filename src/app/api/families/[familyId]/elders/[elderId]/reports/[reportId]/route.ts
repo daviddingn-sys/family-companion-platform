@@ -42,18 +42,6 @@ export async function GET(
       data.summary,
     ];
 
-    if (data.ai_summary) {
-      lines.push(
-        "",
-        "## AI 健康总结",
-        "",
-        data.ai_summary,
-        "",
-        `模型：${data.ai_model ?? "-"}`,
-        `生成时间：${data.ai_generated_at ? new Date(data.ai_generated_at).toLocaleString("zh-CN") : "-"}`,
-      );
-    }
-
     return new NextResponse(lines.join("\n"), {
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
