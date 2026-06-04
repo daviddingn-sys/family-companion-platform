@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { requestJson } from "@/lib/client-http";
 
 type BloodPressureRecord = {
   id: string;
@@ -38,6 +39,38 @@ type Summary = {
   systolicAvg: number | null;
   diastolicAvg: number | null;
   pulseAvg: number | null;
+};
+
+type BloodPressureListResponse = {
+  records: BloodPressureRecord[];
+  summary: Summary | null;
+};
+
+type BloodPressureMutationResponse = {
+  abnormalEventsCreated?: number;
+  abnormalEventsUpdated?: number;
+};
+
+type UploadResponse = {
+  key: string;
+};
+
+type SignedImageResponse = {
+  url?: string;
+};
+
+type OcrResponse = {
+  data?: {
+    systolic?: number | null;
+    diastolic?: number | null;
+    pulse?: number | null;
+  };
+};
+
+type ImportResponse = {
+  inserted?: number;
+  failed?: number;
+  abnormalEventsCreated?: number;
 };
 
 const periodLabels: Record<string, string> = {
@@ -129,20 +162,19 @@ export function BloodPressureClient({
   );
 
   const load = useCallback(() => {
-    fetch(`${endpoint}?month=${month}`)
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.error) {
-          throw new Error(result.error);
-        }
+    async function run() {
+      const result = await requestJson<BloodPressureListResponse>(`${endpoint}?month=${month}`);
+      if (result.ok) {
         setLoadError("");
-        setRecords(result.records ?? []);
-        setSummary(result.summary ?? null);
-      })
-      .catch((loadError: Error) => {
-        setLoadError(loadError.message || "血压记录加载失败");
-      })
-      .finally(() => setLoading(false));
+        setRecords(result.data.records ?? []);
+        setSummary(result.data.summary ?? null);
+      } else {
+        setLoadError(result.error);
+      }
+      setLoading(false);
+    }
+
+    run();
   }, [endpoint, month]);
 
   useEffect(() => {
@@ -155,7 +187,7 @@ export function BloodPressureClient({
     setSaveMessage("");
     setSaving(true);
 
-    const response = await fetch(endpoint, {
+    const result = await requestJson<BloodPressureMutationResponse>(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -170,16 +202,15 @@ export function BloodPressureClient({
         status: "confirmed",
       }),
     });
-    const result = await response.json();
     setSaving(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "保存失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    if (result.abnormalEventsCreated > 0) {
-      setSaveMessage(`已保存记录，并自动生成 ${result.abnormalEventsCreated} 条异常记录。`);
+    if ((result.data.abnormalEventsCreated ?? 0) > 0) {
+      setSaveMessage(`已保存记录，并自动生成 ${result.data.abnormalEventsCreated} 条异常记录。`);
     } else {
       setSaveMessage("已保存记录。");
     }
@@ -216,7 +247,7 @@ export function BloodPressureClient({
 
     setEditError("");
     setUpdating(true);
-    const response = await fetch(`${endpoint}/${editingRecord.id}`, {
+    const result = await requestJson<BloodPressureMutationResponse>(`${endpoint}/${editingRecord.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -231,18 +262,17 @@ export function BloodPressureClient({
         status: editingRecord.status,
       }),
     });
-    const result = await response.json();
     setUpdating(false);
 
-    if (!response.ok) {
-      setEditError(result.error ?? "更新失败");
+    if (!result.ok) {
+      setEditError(result.error);
       return;
     }
 
-    if (result.abnormalEventsCreated > 0) {
-      setSaveMessage(`已保存修改，并自动生成 ${result.abnormalEventsCreated} 条异常记录。`);
-    } else if (result.abnormalEventsUpdated > 0) {
-      setSaveMessage(`已保存修改，并同步 ${result.abnormalEventsUpdated} 条异常记录。`);
+    if ((result.data.abnormalEventsCreated ?? 0) > 0) {
+      setSaveMessage(`已保存修改，并自动生成 ${result.data.abnormalEventsCreated} 条异常记录。`);
+    } else if ((result.data.abnormalEventsUpdated ?? 0) > 0) {
+      setSaveMessage(`已保存修改，并同步 ${result.data.abnormalEventsUpdated} 条异常记录。`);
     } else {
       setSaveMessage("已保存修改。");
     }
@@ -257,10 +287,9 @@ export function BloodPressureClient({
     }
 
     setError("");
-    const response = await fetch(`${endpoint}/${recordId}`, { method: "DELETE" });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error ?? "删除失败");
+    const result = await requestJson(`${endpoint}/${recordId}`, { method: "DELETE" });
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
@@ -273,27 +302,27 @@ export function BloodPressureClient({
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${endpoint}/upload`, {
+    const result = await requestJson<UploadResponse>(`${endpoint}/upload`, {
       method: "POST",
       body: formData,
     });
-    const result = await response.json();
     setUploading(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "图片上传失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    setImageKey(result.key);
-    const signedResponse = await fetch(`${endpoint}/image-url`, {
+    setImageKey(result.data.key);
+    const signed = await requestJson<SignedImageResponse>(`${endpoint}/image-url`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: result.key }),
+      body: JSON.stringify({ key: result.data.key }),
     });
-    const signed = await signedResponse.json();
-    if (signed.url) {
-      setImageUrl(signed.url);
+    if (signed.ok && signed.data.url) {
+      setImageUrl(signed.data.url);
+    } else if (!signed.ok) {
+      setError(signed.error);
     }
   }
 
@@ -305,24 +334,23 @@ export function BloodPressureClient({
 
     setError("");
     setRecognizing(true);
-    const response = await fetch(`${endpoint}/ocr`, {
+    const result = await requestJson<OcrResponse>(`${endpoint}/ocr`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: imageKey }),
     });
-    const result = await response.json();
     setRecognizing(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "OCR 识别失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
     setForm((current) => ({
       ...current,
-      systolic: result.data?.systolic ? String(result.data.systolic) : current.systolic,
-      diastolic: result.data?.diastolic ? String(result.data.diastolic) : current.diastolic,
-      pulse: result.data?.pulse ? String(result.data.pulse) : current.pulse,
+      systolic: result.data.data?.systolic ? String(result.data.data.systolic) : current.systolic,
+      diastolic: result.data.data?.diastolic ? String(result.data.data.diastolic) : current.diastolic,
+      pulse: result.data.data?.pulse ? String(result.data.data.pulse) : current.pulse,
     }));
   }
 
@@ -334,20 +362,19 @@ export function BloodPressureClient({
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${endpoint}/import`, {
+    const result = await requestJson<ImportResponse>(`${endpoint}/import`, {
       method: "POST",
       body: formData,
     });
-    const result = await response.json();
     setImporting(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "导入失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
     setImportMessage(
-      `导入完成：成功 ${result.inserted} 条，失败 ${result.failed} 条，自动生成异常记录 ${result.abnormalEventsCreated ?? 0} 条`,
+      `导入完成：成功 ${result.data.inserted ?? 0} 条，失败 ${result.data.failed ?? 0} 条，自动生成异常记录 ${result.data.abnormalEventsCreated ?? 0} 条`,
     );
     load();
   }
