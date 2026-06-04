@@ -13,6 +13,13 @@ const severityLabels: Record<string, string> = {
   critical: "紧急",
 };
 
+const reminderTypeLabels: Record<string, string> = {
+  medicine: "用药",
+  measurement: "测量",
+  appointment: "就医",
+  custom: "其他",
+};
+
 export default async function DashboardPage() {
   const user = await requireUser();
   const admin = createSupabaseAdminClient();
@@ -42,6 +49,7 @@ export default async function DashboardPage() {
     { count: activeReminderCount },
     { count: reportCount },
     { data: elders },
+    { data: upcomingReminders },
     { data: recentAbnormalEvents },
   ] = await Promise.all([
     familyIds.length
@@ -67,6 +75,16 @@ export default async function DashboardPage() {
       : Promise.resolve({ count: 0 }),
     familyIds.length
       ? admin.from("elders").select("id,name,family_id").in("family_id", familyIds).order("created_at", { ascending: false }).limit(5)
+      : Promise.resolve({ data: [] }),
+    familyIds.length
+      ? admin
+          .from("reminders")
+          .select("id,title,type,due_at,family_id,elder_id")
+          .in("family_id", familyIds)
+          .eq("status", "active")
+          .not("due_at", "is", null)
+          .order("due_at", { ascending: true })
+          .limit(5)
       : Promise.resolve({ data: [] }),
     familyIds.length
       ? admin.from("abnormal_events").select("id,title,severity,occurred_at,family_id,elder_id").in("family_id", familyIds).order("occurred_at", { ascending: false }).limit(5)
@@ -149,7 +167,7 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="rounded-lg">
           <CardHeader>
             <CardTitle>老人档案</CardTitle>
@@ -165,6 +183,30 @@ export default async function DashboardPage() {
                   href={`/families/${elder.family_id}/elders/${elder.id}`}
                 >
                   {elder.name}
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle>近期提醒</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(upcomingReminders ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">暂无已设置时间的待处理提醒。</p>
+            ) : (
+              (upcomingReminders ?? []).map((reminder) => (
+                <Link
+                  key={reminder.id}
+                  className="block rounded-md border p-3 text-sm hover:bg-accent"
+                  href={`/families/${reminder.family_id}/elders/${reminder.elder_id}/reminders`}
+                >
+                  <span className="font-medium">{reminder.title}</span>
+                  <span className="ml-2 text-muted-foreground">
+                    {reminderTypeLabels[reminder.type] ?? reminder.type} ·{" "}
+                    {reminder.due_at ? new Date(reminder.due_at).toLocaleString("zh-CN") : "未设置时间"}
+                  </span>
                 </Link>
               ))
             )}
