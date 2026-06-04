@@ -1,17 +1,23 @@
 import { z } from "zod";
 
 function isValidDateTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
+  const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/.exec(value);
+  if (!match) return false;
 
-  const datePart = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (!datePart) return true;
+  const [, yearValue, monthValue, dayValue, hourValue, minuteValue] = match;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+  const date = new Date(year, month - 1, day, hour, minute);
 
-  const [, yearValue, monthValue, dayValue] = datePart;
   return (
-    date.getFullYear() === Number(yearValue) &&
-    date.getMonth() === Number(monthValue) - 1 &&
-    date.getDate() === Number(dayValue)
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day &&
+    date.getHours() === hour &&
+    date.getMinutes() === minute
   );
 }
 
