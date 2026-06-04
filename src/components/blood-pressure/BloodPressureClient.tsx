@@ -239,6 +239,14 @@ export function BloodPressureClient({
       return;
     }
 
+    if (result.abnormalEventsCreated > 0) {
+      setSaveMessage(`已保存修改，并自动生成 ${result.abnormalEventsCreated} 条异常记录。`);
+    } else if (result.abnormalEventsUpdated > 0) {
+      setSaveMessage(`已保存修改，并同步 ${result.abnormalEventsUpdated} 条异常记录。`);
+    } else {
+      setSaveMessage("已保存修改。");
+    }
+
     setEditingRecord(null);
     load();
   }
