@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { requestJson } from "@/lib/client-http";
 
 type AbnormalEvent = {
   id: string;
@@ -26,6 +27,10 @@ type AbnormalEvent = {
   status: string;
   description: string | null;
   related_blood_pressure_record_id: string | null;
+};
+
+type AbnormalEventsResponse = {
+  abnormalEvents: AbnormalEvent[];
 };
 
 const eventTypeLabels: Record<string, string> = {
@@ -100,19 +105,18 @@ export function AbnormalEventsClient({
   );
 
   const load = useCallback(() => {
-    fetch(endpoint)
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.error) {
-          throw new Error(result.error);
-        }
+    async function run() {
+      const result = await requestJson<AbnormalEventsResponse>(endpoint);
+      if (result.ok) {
         setLoadError("");
-        setEvents(result.abnormalEvents ?? []);
-      })
-      .catch((loadError: Error) => {
-        setLoadError(loadError.message || "异常记录加载失败");
-      })
-      .finally(() => setLoading(false));
+        setEvents(result.data.abnormalEvents ?? []);
+      } else {
+        setLoadError(result.error);
+      }
+      setLoading(false);
+    }
+
+    run();
   }, [endpoint]);
 
   useEffect(() => {
@@ -123,16 +127,15 @@ export function AbnormalEventsClient({
     event.preventDefault();
     setError("");
     setSaving(true);
-    const response = await fetch(endpoint, {
+    const result = await requestJson(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    const result = await response.json();
     setSaving(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "保存失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -160,16 +163,15 @@ export function AbnormalEventsClient({
 
     setEditError("");
     setUpdating(true);
-    const response = await fetch(`${endpoint}/${editingEvent.id}`, {
+    const result = await requestJson(`${endpoint}/${editingEvent.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editForm),
     });
-    const result = await response.json();
     setUpdating(false);
 
-    if (!response.ok) {
-      setEditError(result.error ?? "更新失败");
+    if (!result.ok) {
+      setEditError(result.error);
       return;
     }
 
@@ -179,7 +181,7 @@ export function AbnormalEventsClient({
 
   async function updateStatus(abnormalEvent: AbnormalEvent, status: string) {
     setError("");
-    const response = await fetch(`${endpoint}/${abnormalEvent.id}`, {
+    const result = await requestJson(`${endpoint}/${abnormalEvent.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -192,9 +194,8 @@ export function AbnormalEventsClient({
         relatedBloodPressureRecordId: abnormalEvent.related_blood_pressure_record_id ?? "",
       }),
     });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error ?? "更新失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
@@ -206,10 +207,9 @@ export function AbnormalEventsClient({
     }
 
     setError("");
-    const response = await fetch(`${endpoint}/${eventId}`, { method: "DELETE" });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error ?? "删除失败");
+    const result = await requestJson(`${endpoint}/${eventId}`, { method: "DELETE" });
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
