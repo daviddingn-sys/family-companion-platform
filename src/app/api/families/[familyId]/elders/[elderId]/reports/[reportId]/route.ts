@@ -51,8 +51,11 @@ export async function DELETE(
     .delete()
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
-    .eq("id", reportId);
+    .eq("id", reportId)
+    .select("id")
+    .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "健康报告不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
