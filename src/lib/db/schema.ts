@@ -238,6 +238,8 @@ export const healthReports = pgTable(
   ],
 );
 
+// Reserved historical table. Do not expose it as an elder companion feature
+// until the Web platform intentionally starts the later AI phase.
 export const companionMessages = pgTable(
   "companion_messages",
   {
