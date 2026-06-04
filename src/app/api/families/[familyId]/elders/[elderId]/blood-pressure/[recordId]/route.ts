@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { syncBloodPressureAbnormalEvent } from "@/lib/abnormal-events";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isNoRowsError } from "@/lib/supabase/errors";
@@ -29,7 +30,14 @@ export async function GET(
 
   if (isNoRowsError(error)) return NextResponse.json({ error: "血压记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ record: data });
+
+  const abnormalEventResult = await syncBloodPressureAbnormalEvent(data);
+  return NextResponse.json({
+    record: data,
+    abnormalEventsCreated: abnormalEventResult.created,
+    abnormalEventsUpdated: abnormalEventResult.updated,
+    abnormalEventError: abnormalEventResult.error?.message ?? null,
+  });
 }
 
 export async function PATCH(
