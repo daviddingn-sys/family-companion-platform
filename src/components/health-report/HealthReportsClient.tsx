@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, Plus, Sparkles } from "lucide-react";
+import { Download, FileText, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -237,6 +237,12 @@ export function HealthReportsClient({
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <a href={`${endpoint}/${report.id}?format=markdown`}>
+                        <Download className="size-4" />
+                        下载
+                      </a>
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => generateSummary(report.id)} disabled={generatingSummaryId === report.id}>
                       <Sparkles className="size-4" />
                       {generatingSummaryId === report.id ? "生成中" : "AI 总结"}
