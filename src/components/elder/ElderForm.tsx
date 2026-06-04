@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { requestJson } from "@/lib/client-http";
 
 type ElderFormData = {
   id?: string;
@@ -19,6 +20,12 @@ type ElderFormData = {
   emergency_contact_phone?: string | null;
   address?: string | null;
   medical_notes?: string | null;
+};
+
+type ElderResponse = {
+  elder: {
+    id: string;
+  };
 };
 
 export function ElderForm({
@@ -47,7 +54,7 @@ export function ElderForm({
     setLoading(true);
     setError("");
 
-    const response = await fetch(
+    const result = await requestJson<ElderResponse>(
       elder?.id
         ? `/api/families/${familyId}/elders/${elder.id}`
         : `/api/families/${familyId}/elders`,
@@ -57,15 +64,14 @@ export function ElderForm({
         body: JSON.stringify(form),
       },
     );
-    const result = await response.json();
     setLoading(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "保存失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    router.push(`/families/${familyId}/elders/${result.elder.id}`);
+    router.push(`/families/${familyId}/elders/${result.data.elder.id}`);
     router.refresh();
   }
 
