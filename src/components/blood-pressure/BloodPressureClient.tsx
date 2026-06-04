@@ -1,9 +1,16 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, Camera, Download, FileUp, Plus, ScanText, TrendingUp } from "lucide-react";
+import { Activity, Camera, Download, FileUp, Pencil, Plus, ScanText, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -58,6 +65,13 @@ function defaultMeasuredAt() {
   return local.toISOString().slice(0, 16);
 }
 
+function toLocalInputValue(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return defaultMeasuredAt();
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+}
+
 function defaultPeriod() {
   const hour = new Date().getHours();
   if (hour < 12) return "morning";
@@ -89,6 +103,17 @@ export function BloodPressureClient({
   const [importMessage, setImportMessage] = useState("");
   const [imageKey, setImageKey] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [editingRecord, setEditingRecord] = useState<BloodPressureRecord | null>(null);
+  const [editError, setEditError] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [editForm, setEditForm] = useState({
+    measuredAt: defaultMeasuredAt(),
+    period: defaultPeriod(),
+    systolic: "",
+    diastolic: "",
+    pulse: "",
+    note: "",
+  });
   const [form, setForm] = useState({
     measuredAt: defaultMeasuredAt(),
     period: defaultPeriod(),
@@ -169,6 +194,52 @@ export function BloodPressureClient({
     });
     setImageKey("");
     setImageUrl("");
+    load();
+  }
+
+  function startEdit(record: BloodPressureRecord) {
+    setEditError("");
+    setEditingRecord(record);
+    setEditForm({
+      measuredAt: toLocalInputValue(record.measured_at),
+      period: record.period,
+      systolic: String(record.systolic),
+      diastolic: String(record.diastolic),
+      pulse: String(record.pulse),
+      note: record.note ?? "",
+    });
+  }
+
+  async function updateRecord(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingRecord) return;
+
+    setEditError("");
+    setUpdating(true);
+    const response = await fetch(`${endpoint}/${editingRecord.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        measuredAt: new Date(editForm.measuredAt).toISOString(),
+        period: editForm.period,
+        systolic: editForm.systolic,
+        diastolic: editForm.diastolic,
+        pulse: editForm.pulse,
+        note: editForm.note,
+        imageKey: editingRecord.image_key ?? "",
+        source: editingRecord.source,
+        status: editingRecord.status,
+      }),
+    });
+    const result = await response.json();
+    setUpdating(false);
+
+    if (!response.ok) {
+      setEditError(result.error ?? "更新失败");
+      return;
+    }
+
+    setEditingRecord(null);
     load();
   }
 
@@ -604,14 +675,99 @@ export function BloodPressureClient({
                   )}
                   {record.note && <p className="mt-1 text-sm">{record.note}</p>}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => remove(record.id)}>
-                  删除
-                </Button>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Button variant="outline" size="sm" onClick={() => startEdit(record)}>
+                    <Pencil className="size-4" />
+                    编辑
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => remove(record.id)}>
+                    删除
+                  </Button>
+                </div>
               </div>
             ))
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(editingRecord)} onOpenChange={(open) => !open && setEditingRecord(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>编辑血压记录</DialogTitle>
+          </DialogHeader>
+          <form className="grid gap-3 md:grid-cols-2" onSubmit={updateRecord}>
+            <div className="space-y-2 md:col-span-2">
+              <Label>测量时间</Label>
+              <Input
+                type="datetime-local"
+                value={editForm.measuredAt}
+                onChange={(event) => setEditForm((current) => ({ ...current, measuredAt: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>时段</Label>
+              <Select
+                value={editForm.period}
+                onValueChange={(period) => setEditForm((current) => ({ ...current, period }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="morning">早</SelectItem>
+                  <SelectItem value="noon">中</SelectItem>
+                  <SelectItem value="evening">晚</SelectItem>
+                  <SelectItem value="night">夜</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>脉搏</Label>
+              <Input
+                type="number"
+                value={editForm.pulse}
+                onChange={(event) => setEditForm((current) => ({ ...current, pulse: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>高压</Label>
+              <Input
+                type="number"
+                value={editForm.systolic}
+                onChange={(event) => setEditForm((current) => ({ ...current, systolic: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>低压</Label>
+              <Input
+                type="number"
+                value={editForm.diastolic}
+                onChange={(event) => setEditForm((current) => ({ ...current, diastolic: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>备注</Label>
+              <Textarea
+                value={editForm.note}
+                onChange={(event) => setEditForm((current) => ({ ...current, note: event.target.value }))}
+              />
+            </div>
+            {editError && <p className="text-sm text-destructive md:col-span-2">{editError}</p>}
+            <DialogFooter className="md:col-span-2">
+              <Button type="button" variant="outline" onClick={() => setEditingRecord(null)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updating}>
+                {updating ? "保存中..." : "保存修改"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
