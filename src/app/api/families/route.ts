@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (memberError) {
+    await admin.from("families").delete().eq("id", family.id);
     return NextResponse.json({ error: memberError.message }, { status: 500 });
   }
 
