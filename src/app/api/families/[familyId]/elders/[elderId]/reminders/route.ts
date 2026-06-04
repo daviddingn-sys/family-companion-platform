@@ -21,6 +21,9 @@ export async function GET(
   const membership = await requireFamilyMember(familyId, user.id);
   if (membership instanceof NextResponse) return membership;
 
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
+
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("reminders")
