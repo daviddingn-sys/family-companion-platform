@@ -97,8 +97,11 @@ export async function DELETE(
     .delete()
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
-    .eq("id", medicationId);
+    .eq("id", medicationId)
+    .select("id")
+    .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "用药记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
