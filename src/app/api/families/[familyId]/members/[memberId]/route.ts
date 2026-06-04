@@ -7,7 +7,6 @@ import { getRouteUser, requireFamilyRole } from "@/lib/permissions";
 const updateMemberSchema = z.object({
   role: z.enum(["admin", "member", "viewer"]).optional(),
   relationship: z.string().trim().max(30).optional(),
-  status: z.enum(["active", "invited", "removed"]).optional(),
 });
 
 export async function PATCH(
