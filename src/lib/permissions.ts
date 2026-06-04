@@ -45,7 +45,10 @@ export async function ensureProfile(user: User) {
     updated_at: new Date().toISOString(),
   };
 
-  await admin.from("profiles").upsert(profile, { onConflict: "id" });
+  const { error } = await admin.from("profiles").upsert(profile, { onConflict: "id" });
+  if (error) {
+    throw error;
+  }
 }
 
 export async function getFamilyMembership(familyId: string, userId: string) {
