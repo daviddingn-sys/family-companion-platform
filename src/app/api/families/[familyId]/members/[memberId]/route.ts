@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isNoRowsError } from "@/lib/supabase/errors";
 import { getRouteUser, requireFamilyRole } from "@/lib/permissions";
 
 const updateMemberSchema = z.object({
@@ -27,14 +28,16 @@ export async function PATCH(
   }
 
   const admin = createSupabaseAdminClient();
-  const { data: target } = await admin
+  const { data: target, error: targetError } = await admin
     .from("family_members")
     .select("role,user_id")
     .eq("id", memberId)
     .eq("family_id", familyId)
     .single();
 
-  if (!target || target.role === "owner") {
+  if (isNoRowsError(targetError)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
+  if (targetError) return NextResponse.json({ error: targetError.message }, { status: 500 });
+  if (target.role === "owner") {
     return NextResponse.json({ error: "不能修改家庭所有者" }, { status: 400 });
   }
 
@@ -50,6 +53,7 @@ export async function PATCH(
     .select("id,role,relationship,status")
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ member: data });
 }
@@ -66,14 +70,16 @@ export async function DELETE(
   if (membership instanceof NextResponse) return membership;
 
   const admin = createSupabaseAdminClient();
-  const { data: target } = await admin
+  const { data: target, error: targetError } = await admin
     .from("family_members")
     .select("role")
     .eq("id", memberId)
     .eq("family_id", familyId)
     .single();
 
-  if (!target || target.role === "owner") {
+  if (isNoRowsError(targetError)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
+  if (targetError) return NextResponse.json({ error: targetError.message }, { status: 500 });
+  if (target.role === "owner") {
     return NextResponse.json({ error: "不能移除家庭所有者" }, { status: 400 });
   }
 
@@ -85,8 +91,11 @@ export async function DELETE(
     .from("family_members")
     .update({ status: "removed", updated_at: new Date().toISOString() })
     .eq("id", memberId)
-    .eq("family_id", familyId);
+    .eq("family_id", familyId)
+    .select("id")
+    .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
