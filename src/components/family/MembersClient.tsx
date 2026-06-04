@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { requestJson } from "@/lib/client-http";
 
 type Member = {
   id: string;
@@ -15,6 +16,10 @@ type Member = {
   invited_email: string | null;
   invited_phone: string | null;
   profiles: { display_name: string | null; phone: string | null } | null;
+};
+
+type MembersResponse = {
+  members: Member[];
 };
 
 const roleLabels: Record<string, string> = {
@@ -45,20 +50,25 @@ export function MembersClient({
   const [relationship, setRelationship] = useState("");
   const [role, setRole] = useState("member");
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const canManageAdmins = currentRole === "owner";
 
   const load = useCallback(() => {
-    fetch(`/api/families/${familyId}/members`)
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "成员列表加载失败");
-        setMembers(result.members ?? []);
-      })
-      .catch((loadError) => setActionError(loadError instanceof Error ? loadError.message : "成员列表加载失败"))
-      .finally(() => setLoading(false));
+    async function run() {
+      const result = await requestJson<MembersResponse>(`/api/families/${familyId}/members`);
+      if (result.ok) {
+        setLoadError("");
+        setMembers(result.data.members ?? []);
+      } else {
+        setLoadError(result.error);
+      }
+      setLoading(false);
+    }
+
+    run();
   }, [familyId]);
 
   useEffect(() => {
@@ -69,15 +79,14 @@ export function MembersClient({
     event.preventDefault();
     setError("");
     setSaving(true);
-    const response = await fetch(`/api/families/${familyId}/members`, {
+    const result = await requestJson(`/api/families/${familyId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, phone, relationship, role }),
     });
-    const result = await response.json();
     setSaving(false);
-    if (!response.ok) {
-      setError(result.error ?? "邀请失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     setEmail("");
@@ -89,14 +98,13 @@ export function MembersClient({
 
   async function updateMember(memberId: string, payload: Record<string, string>) {
     setActionError("");
-    const response = await fetch(`/api/families/${familyId}/members/${memberId}`, {
+    const result = await requestJson(`/api/families/${familyId}/members/${memberId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const result = await response.json();
-    if (!response.ok) {
-      setActionError(result.error ?? "更新失败");
+    if (!result.ok) {
+      setActionError(result.error);
       return;
     }
     load();
@@ -104,12 +112,11 @@ export function MembersClient({
 
   async function removeMember(memberId: string) {
     setActionError("");
-    const response = await fetch(`/api/families/${familyId}/members/${memberId}`, {
+    const result = await requestJson(`/api/families/${familyId}/members/${memberId}`, {
       method: "DELETE",
     });
-    const result = await response.json();
-    if (!response.ok) {
-      setActionError(result.error ?? "移除失败");
+    if (!result.ok) {
+      setActionError(result.error);
       return;
     }
     load();
@@ -169,7 +176,9 @@ export function MembersClient({
       )}
       {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       <div className="grid gap-3">
-        {loading ? (
+        {loadError ? (
+          <p className="text-sm text-destructive">{loadError}</p>
+        ) : loading ? (
           <p className="text-sm text-muted-foreground">加载中...</p>
         ) : members.length === 0 ? (
           <p className="text-sm text-muted-foreground">暂无家庭成员。</p>
