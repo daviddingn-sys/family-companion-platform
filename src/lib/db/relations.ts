@@ -147,6 +147,8 @@ export const healthReportRelations = relations(healthReports, ({ one }) => ({
   }),
 }));
 
+// Kept only so existing databases with this historical table keep their ORM
+// mapping. There is no current Web route or API using elder companion messages.
 export const companionMessageRelations = relations(companionMessages, ({ one }) => ({
   family: one(families, {
     fields: [companionMessages.familyId],
