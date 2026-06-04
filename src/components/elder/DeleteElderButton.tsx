@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { requestJson } from "@/lib/client-http";
 
 export function DeleteElderButton({
   familyId,
@@ -22,14 +23,13 @@ export function DeleteElderButton({
 
     setError("");
     setLoading(true);
-    const response = await fetch(`/api/families/${familyId}/elders/${elderId}`, {
+    const result = await requestJson(`/api/families/${familyId}/elders/${elderId}`, {
       method: "DELETE",
     });
-    const result = await response.json();
     setLoading(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "删除失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
