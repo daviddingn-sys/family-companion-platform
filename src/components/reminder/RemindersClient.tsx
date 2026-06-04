@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { requestJson } from "@/lib/client-http";
 
 type Reminder = {
   id: string;
@@ -24,6 +25,10 @@ type Reminder = {
   repeat_rule: string | null;
   status: string;
   note: string | null;
+};
+
+type RemindersResponse = {
+  reminders: Reminder[];
 };
 
 const typeLabels: Record<string, string> = {
@@ -83,19 +88,18 @@ export function RemindersClient({
   );
 
   const load = useCallback(() => {
-    fetch(endpoint)
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.error) {
-          throw new Error(result.error);
-        }
+    async function run() {
+      const result = await requestJson<RemindersResponse>(endpoint);
+      if (result.ok) {
         setLoadError("");
-        setReminders(result.reminders ?? []);
-      })
-      .catch((loadError: Error) => {
-        setLoadError(loadError.message || "提醒事项加载失败");
-      })
-      .finally(() => setLoading(false));
+        setReminders(result.data.reminders ?? []);
+      } else {
+        setLoadError(result.error);
+      }
+      setLoading(false);
+    }
+
+    run();
   }, [endpoint]);
 
   useEffect(() => {
@@ -106,16 +110,15 @@ export function RemindersClient({
     event.preventDefault();
     setError("");
     setSaving(true);
-    const response = await fetch(endpoint, {
+    const result = await requestJson(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    const result = await response.json();
     setSaving(false);
 
-    if (!response.ok) {
-      setError(result.error ?? "保存失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -142,16 +145,15 @@ export function RemindersClient({
 
     setEditError("");
     setUpdating(true);
-    const response = await fetch(`${endpoint}/${editingReminder.id}`, {
+    const result = await requestJson(`${endpoint}/${editingReminder.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editForm),
     });
-    const result = await response.json();
     setUpdating(false);
 
-    if (!response.ok) {
-      setEditError(result.error ?? "更新失败");
+    if (!result.ok) {
+      setEditError(result.error);
       return;
     }
 
@@ -161,7 +163,7 @@ export function RemindersClient({
 
   async function updateStatus(reminder: Reminder, status: string) {
     setError("");
-    const response = await fetch(`${endpoint}/${reminder.id}`, {
+    const result = await requestJson(`${endpoint}/${reminder.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -173,9 +175,8 @@ export function RemindersClient({
         note: reminder.note ?? "",
       }),
     });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error ?? "更新失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
@@ -187,10 +188,9 @@ export function RemindersClient({
     }
 
     setError("");
-    const response = await fetch(`${endpoint}/${reminderId}`, { method: "DELETE" });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error ?? "删除失败");
+    const result = await requestJson(`${endpoint}/${reminderId}`, { method: "DELETE" });
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     load();
