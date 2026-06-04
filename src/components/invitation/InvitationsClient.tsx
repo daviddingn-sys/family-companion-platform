@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requestJson } from "@/lib/client-http";
 
 type Invitation = {
   id: string;
@@ -17,6 +18,16 @@ type Invitation = {
     id: string;
     name: string;
   } | null;
+};
+
+type InvitationsResponse = {
+  invitations: Invitation[];
+};
+
+type AcceptInvitationResponse = {
+  member?: {
+    family_id?: string;
+  };
 };
 
 const roleLabels: Record<string, string> = {
@@ -33,14 +44,17 @@ export function InvitationsClient() {
   const [acceptingId, setAcceptingId] = useState("");
 
   const load = useCallback(() => {
-    fetch("/api/invitations")
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "邀请列表加载失败");
-        setInvitations(result.invitations ?? []);
-      })
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "邀请列表加载失败"))
-      .finally(() => setLoading(false));
+    async function run() {
+      const result = await requestJson<InvitationsResponse>("/api/invitations");
+      if (result.ok) {
+        setInvitations(result.data.invitations ?? []);
+      } else {
+        setError(result.error);
+      }
+      setLoading(false);
+    }
+
+    run();
   }, []);
 
   useEffect(() => {
@@ -51,20 +65,19 @@ export function InvitationsClient() {
     setError("");
     setAcceptedFamilyId("");
     setAcceptingId(memberId);
-    const response = await fetch("/api/invitations", {
+    const result = await requestJson<AcceptInvitationResponse>("/api/invitations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ memberId }),
     });
-    const result = await response.json();
     setAcceptingId("");
 
-    if (!response.ok) {
-      setError(result.error ?? "接受邀请失败");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    setAcceptedFamilyId(result.member?.family_id ?? "");
+    setAcceptedFamilyId(result.data.member?.family_id ?? "");
     load();
   }
 
