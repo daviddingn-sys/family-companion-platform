@@ -4,15 +4,22 @@ export const BLOOD_PRESSURE_IMAGE_BUCKET = "blood-pressure-images";
 
 export async function ensureBloodPressureImageBucket() {
   const admin = createSupabaseAdminClient();
-  const { data: buckets } = await admin.storage.listBuckets();
+  const { data: buckets, error: listError } = await admin.storage.listBuckets();
+  if (listError) {
+    throw new Error(listError.message);
+  }
+
   const exists = buckets?.some((bucket) => bucket.name === BLOOD_PRESSURE_IMAGE_BUCKET);
 
   if (!exists) {
-    await admin.storage.createBucket(BLOOD_PRESSURE_IMAGE_BUCKET, {
+    const { error: createError } = await admin.storage.createBucket(BLOOD_PRESSURE_IMAGE_BUCKET, {
       public: false,
       fileSizeLimit: 10 * 1024 * 1024,
       allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
     });
+    if (createError) {
+      throw new Error(createError.message);
+    }
   }
 }
 
