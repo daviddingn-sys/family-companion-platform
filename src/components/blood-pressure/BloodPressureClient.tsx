@@ -459,6 +459,12 @@ export function BloodPressureClient({
               导出 CSV
             </a>
           </Button>
+          <Button asChild variant="outline">
+            <a href={`${endpoint}/export?month=${month}&format=xlsx`}>
+              <Download className="size-4" />
+              导出 Excel
+            </a>
+          </Button>
         </div>
       </div>
 
