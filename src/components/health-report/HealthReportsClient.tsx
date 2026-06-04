@@ -74,6 +74,7 @@ export function HealthReportsClient({
   const initialRange = defaultRange("weekly");
   const [reports, setReports] = useState<HealthReport[]>([]);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,6 +115,7 @@ export function HealthReportsClient({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setMessage("");
     setSaving(true);
     const result = await requestJson(endpoint, {
       method: "POST",
@@ -126,6 +128,7 @@ export function HealthReportsClient({
       setError(result.error);
       return;
     }
+    setMessage("健康报告已生成。");
     load();
   }
 
@@ -135,11 +138,13 @@ export function HealthReportsClient({
     }
 
     setError("");
+    setMessage("");
     const result = await requestJson(`${endpoint}/${reportId}`, { method: "DELETE" });
     if (!result.ok) {
       setError(result.error);
       return;
     }
+    setMessage("健康报告已删除。");
     load();
   }
 
@@ -195,6 +200,7 @@ export function HealthReportsClient({
               </Button>
             </div>
             {error && <p className="text-sm text-destructive md:col-span-4">{error}</p>}
+            {message && <p className="text-sm text-muted-foreground md:col-span-4">{message}</p>}
           </form>
         </CardContent>
       </Card>
