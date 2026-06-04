@@ -1,9 +1,16 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Pill, Plus } from "lucide-react";
+import { Pencil, Pill, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,6 +34,17 @@ const statusLabels: Record<string, string> = {
   stopped: "已停用",
 };
 
+const emptyMedicationForm = {
+  name: "",
+  dosage: "",
+  frequency: "",
+  instructions: "",
+  startDate: "",
+  endDate: "",
+  status: "active",
+  note: "",
+};
+
 export function MedicationsClient({
   familyId,
   elderId,
@@ -41,16 +59,11 @@ export function MedicationsClient({
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    dosage: "",
-    frequency: "",
-    instructions: "",
-    startDate: "",
-    endDate: "",
-    status: "active",
-    note: "",
-  });
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
+  const [editError, setEditError] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [form, setForm] = useState(emptyMedicationForm);
+  const [editForm, setEditForm] = useState(emptyMedicationForm);
 
   const endpoint = useMemo(
     () => `/api/families/${familyId}/elders/${elderId}/medications`,
@@ -94,16 +107,45 @@ export function MedicationsClient({
       return;
     }
 
-    setForm({
-      name: "",
-      dosage: "",
-      frequency: "",
-      instructions: "",
-      startDate: "",
-      endDate: "",
-      status: "active",
-      note: "",
+    setForm(emptyMedicationForm);
+    load();
+  }
+
+  function startEdit(medication: Medication) {
+    setEditError("");
+    setEditingMedication(medication);
+    setEditForm({
+      name: medication.name,
+      dosage: medication.dosage ?? "",
+      frequency: medication.frequency ?? "",
+      instructions: medication.instructions ?? "",
+      startDate: medication.start_date ?? "",
+      endDate: medication.end_date ?? "",
+      status: medication.status,
+      note: medication.note ?? "",
     });
+  }
+
+  async function updateMedication(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingMedication) return;
+
+    setEditError("");
+    setUpdating(true);
+    const response = await fetch(`${endpoint}/${editingMedication.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editForm),
+    });
+    const result = await response.json();
+    setUpdating(false);
+
+    if (!response.ok) {
+      setEditError(result.error ?? "更新失败");
+      return;
+    }
+
+    setEditingMedication(null);
     load();
   }
 
@@ -278,14 +320,107 @@ export function MedicationsClient({
                     <SelectItem value="stopped">已停用</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" onClick={() => remove(medication.id)}>
-                  删除
-                </Button>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Button variant="outline" size="sm" onClick={() => startEdit(medication)}>
+                    <Pencil className="size-4" />
+                    编辑
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => remove(medication.id)}>
+                    删除
+                  </Button>
+                </div>
               </div>
             ))
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(editingMedication)} onOpenChange={(open) => !open && setEditingMedication(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>编辑用药记录</DialogTitle>
+          </DialogHeader>
+          <form className="grid gap-3 md:grid-cols-2" onSubmit={updateMedication}>
+            <div className="space-y-2 md:col-span-2">
+              <Label>药品名称</Label>
+              <Input
+                value={editForm.name}
+                onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>剂量</Label>
+              <Input
+                value={editForm.dosage}
+                onChange={(event) => setEditForm((current) => ({ ...current, dosage: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>状态</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(status) => setEditForm((current) => ({ ...current, status }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">使用中</SelectItem>
+                  <SelectItem value="paused">暂停</SelectItem>
+                  <SelectItem value="stopped">已停用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>频次</Label>
+              <Input
+                value={editForm.frequency}
+                onChange={(event) => setEditForm((current) => ({ ...current, frequency: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>开始日期</Label>
+              <Input
+                type="date"
+                value={editForm.startDate}
+                onChange={(event) => setEditForm((current) => ({ ...current, startDate: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>结束日期</Label>
+              <Input
+                type="date"
+                value={editForm.endDate}
+                onChange={(event) => setEditForm((current) => ({ ...current, endDate: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>用药说明</Label>
+              <Textarea
+                value={editForm.instructions}
+                onChange={(event) => setEditForm((current) => ({ ...current, instructions: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>备注</Label>
+              <Textarea
+                value={editForm.note}
+                onChange={(event) => setEditForm((current) => ({ ...current, note: event.target.value }))}
+              />
+            </div>
+            {editError && <p className="text-sm text-destructive md:col-span-2">{editError}</p>}
+            <DialogFooter className="md:col-span-2">
+              <Button type="button" variant="outline" onClick={() => setEditingMedication(null)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updating}>
+                {updating ? "保存中..." : "保存修改"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
