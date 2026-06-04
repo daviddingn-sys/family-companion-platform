@@ -1,9 +1,16 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Bell, Plus } from "lucide-react";
+import { Bell, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,6 +48,15 @@ function toLocalInputValue(value: string | null) {
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16).replace("T", " ");
 }
 
+const emptyReminderForm = {
+  title: "",
+  type: "custom",
+  dueAt: "",
+  repeatRule: "",
+  status: "active",
+  note: "",
+};
+
 export function RemindersClient({
   familyId,
   elderId,
@@ -55,14 +71,11 @@ export function RemindersClient({
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    type: "custom",
-    dueAt: "",
-    repeatRule: "",
-    status: "active",
-    note: "",
-  });
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [editError, setEditError] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [form, setForm] = useState(emptyReminderForm);
+  const [editForm, setEditForm] = useState(emptyReminderForm);
 
   const endpoint = useMemo(
     () => `/api/families/${familyId}/elders/${elderId}/reminders`,
@@ -106,14 +119,43 @@ export function RemindersClient({
       return;
     }
 
-    setForm({
-      title: "",
-      type: "custom",
-      dueAt: "",
-      repeatRule: "",
-      status: "active",
-      note: "",
+    setForm(emptyReminderForm);
+    load();
+  }
+
+  function startEdit(reminder: Reminder) {
+    setEditError("");
+    setEditingReminder(reminder);
+    setEditForm({
+      title: reminder.title,
+      type: reminder.type,
+      dueAt: toLocalInputValue(reminder.due_at),
+      repeatRule: reminder.repeat_rule ?? "",
+      status: reminder.status,
+      note: reminder.note ?? "",
     });
+  }
+
+  async function updateReminder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingReminder) return;
+
+    setEditError("");
+    setUpdating(true);
+    const response = await fetch(`${endpoint}/${editingReminder.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editForm),
+    });
+    const result = await response.json();
+    setUpdating(false);
+
+    if (!response.ok) {
+      setEditError(result.error ?? "更新失败");
+      return;
+    }
+
+    setEditingReminder(null);
     load();
   }
 
@@ -277,14 +319,103 @@ export function RemindersClient({
                     <SelectItem value="cancelled">取消</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" onClick={() => remove(reminder.id)}>
-                  删除
-                </Button>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Button variant="outline" size="sm" onClick={() => startEdit(reminder)}>
+                    <Pencil className="size-4" />
+                    编辑
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => remove(reminder.id)}>
+                    删除
+                  </Button>
+                </div>
               </div>
             ))
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(editingReminder)} onOpenChange={(open) => !open && setEditingReminder(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>编辑提醒事项</DialogTitle>
+          </DialogHeader>
+          <form className="grid gap-3 md:grid-cols-2" onSubmit={updateReminder}>
+            <div className="space-y-2 md:col-span-2">
+              <Label>标题</Label>
+              <Input
+                value={editForm.title}
+                onChange={(event) => setEditForm((current) => ({ ...current, title: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>类型</Label>
+              <Select
+                value={editForm.type}
+                onValueChange={(type) => setEditForm((current) => ({ ...current, type }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="medicine">用药</SelectItem>
+                  <SelectItem value="measurement">测量</SelectItem>
+                  <SelectItem value="appointment">就医</SelectItem>
+                  <SelectItem value="custom">其他</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>状态</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(status) => setEditForm((current) => ({ ...current, status }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">待处理</SelectItem>
+                  <SelectItem value="done">已完成</SelectItem>
+                  <SelectItem value="paused">暂停</SelectItem>
+                  <SelectItem value="cancelled">取消</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>计划时间</Label>
+              <Input
+                value={editForm.dueAt}
+                onChange={(event) => setEditForm((current) => ({ ...current, dueAt: event.target.value }))}
+                placeholder="如 2026-06-03 15:20"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>重复说明</Label>
+              <Input
+                value={editForm.repeatRule}
+                onChange={(event) => setEditForm((current) => ({ ...current, repeatRule: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>备注</Label>
+              <Textarea
+                value={editForm.note}
+                onChange={(event) => setEditForm((current) => ({ ...current, note: event.target.value }))}
+              />
+            </div>
+            {editError && <p className="text-sm text-destructive md:col-span-2">{editError}</p>}
+            <DialogFooter className="md:col-span-2">
+              <Button type="button" variant="outline" onClick={() => setEditingReminder(null)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updating}>
+                {updating ? "保存中..." : "保存修改"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
