@@ -5,6 +5,8 @@ type OCRResult = {
   error?: string;
 };
 
+const OCR_TIMEOUT_MS = 30_000;
+
 const OCR_PROMPT = `你是一个血压计读数识别专家。请仔细观察这张血压计屏幕照片，识别以下数据：
 
 1. 高压（收缩压）：通常显示在上方，单位 mmHg
@@ -55,27 +57,37 @@ export async function recognizeBloodPressureImage(imageUrl: string): Promise<OCR
     return { systolic: null, diastolic: null, pulse: null, error: "OCR 服务未配置" };
   }
 
-  const response = await fetch("https://integration.coze.cn/api/v3/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "doubao-seed-2-0-pro-260215",
-      temperature: 0.05,
-      stream: false,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: OCR_PROMPT },
-            { type: "image_url", image_url: { url: imageUrl } },
-          ],
-        },
-      ],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch("https://integration.coze.cn/api/v3/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      signal: AbortSignal.timeout(OCR_TIMEOUT_MS),
+      body: JSON.stringify({
+        model: "doubao-seed-2-0-pro-260215",
+        temperature: 0.05,
+        stream: false,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: OCR_PROMPT },
+              { type: "image_url", image_url: { url: imageUrl } },
+            ],
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    const message =
+      error instanceof DOMException && error.name === "TimeoutError"
+        ? "OCR 服务响应超时，请稍后重试"
+        : "OCR 服务暂时不可用，请稍后重试";
+    return { systolic: null, diastolic: null, pulse: null, error: message };
+  }
 
   if (!response.ok) {
     return {
@@ -86,7 +98,11 @@ export async function recognizeBloodPressureImage(imageUrl: string): Promise<OCR
     };
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
+  if (!data) {
+    return { systolic: null, diastolic: null, pulse: null, error: "OCR 服务返回数据无效" };
+  }
+
   const responseText = data.choices?.[0]?.message?.content ?? "";
   return parseBloodPressureOCRResult(responseText);
 }
