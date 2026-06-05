@@ -82,12 +82,12 @@ export async function POST(
       .eq("family_id", familyId)
       .neq("status", "removed")
       .eq("profiles.phone", parsed.data.phone)
-      .maybeSingle();
+      .limit(1);
 
     if (activeMemberByPhoneError) {
       return NextResponse.json({ error: activeMemberByPhoneError.message }, { status: 500 });
     }
-    if (activeMemberByPhone) {
+    if ((activeMemberByPhone?.length ?? 0) > 0) {
       return NextResponse.json({ error: "该手机号对应的成员已在家庭中" }, { status: 409 });
     }
   }
