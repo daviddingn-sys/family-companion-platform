@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "health_reports_unique_period" ON "health_reports" ("family_id","elder_id","period_type","period_start","period_end");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "abnormal_events_unique_bp_record" ON "abnormal_events" ("family_id","elder_id","related_blood_pressure_record_id") WHERE "event_type" = 'blood_pressure' AND "related_blood_pressure_record_id" IS NOT NULL;
