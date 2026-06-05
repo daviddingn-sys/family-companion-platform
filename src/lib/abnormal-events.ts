@@ -125,7 +125,7 @@ export async function syncBloodPressureAbnormalEvent(record: BloodPressureForAbn
     .eq("elder_id", record.elder_id)
     .eq("event_type", "blood_pressure")
     .eq("related_blood_pressure_record_id", record.id)
-    .maybeSingle();
+    .limit(1);
 
   if (existingError) return { created: 0, updated: 0, error: existingError };
 
@@ -141,11 +141,12 @@ export async function syncBloodPressureAbnormalEvent(record: BloodPressureForAbn
     updated_at: new Date().toISOString(),
   };
 
-  if (existing) {
+  const existingEvent = existing?.[0];
+  if (existingEvent) {
     const { error } = await admin
       .from("abnormal_events")
       .update(eventData)
-      .eq("id", existing.id);
+      .eq("id", existingEvent.id);
     return { created: 0, updated: error ? 0 : 1, error };
   }
 
