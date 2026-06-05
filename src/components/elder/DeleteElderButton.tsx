@@ -25,6 +25,7 @@ export function DeleteElderButton({
     setLoading(true);
     const result = await requestJson(`/api/families/${familyId}/elders/${elderId}`, {
       method: "DELETE",
+      body: JSON.stringify({ confirm: "DELETE_ELDER" }),
     });
     setLoading(false);
 
