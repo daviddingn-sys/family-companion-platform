@@ -49,7 +49,14 @@ export async function POST(
     return NextResponse.json({ error: "图片读取失败，请重新选择图片" }, { status: 400 });
   }
 
-  await ensureBloodPressureImageBucket();
+  try {
+    await ensureBloodPressureImageBucket();
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "图片存储服务不可用" },
+      { status: 500 },
+    );
+  }
 
   const admin = createSupabaseAdminClient();
   const { error } = await admin.storage
