@@ -6,7 +6,7 @@ export const familySchema = z.object({
 
 export const memberInviteSchema = z.object({
   email: z.string().trim().email("请输入有效邮箱").optional().or(z.literal("")),
-  phone: z.string().trim().optional(),
+  phone: z.string().trim().max(30, "手机号过长").optional(),
   relationship: z.string().trim().max(30).optional(),
   role: z.enum(["admin", "member", "viewer"]).default("member"),
 });
