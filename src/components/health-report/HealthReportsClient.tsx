@@ -16,9 +16,6 @@ type HealthReport = {
   period_end: string;
   title: string;
   summary: string;
-  ai_summary: string | null;
-  ai_model: string | null;
-  ai_generated_at: string | null;
   stats: {
     bloodPressure?: {
       count?: number;
