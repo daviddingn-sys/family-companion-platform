@@ -33,7 +33,7 @@
 
 ## 环境变量
 
-复制 `.env.example` 为 `.env.local` 并填写：
+复制 `.env.local.example` 为 `.env.local` 并填写；`.env.example` 保留给部署平台或其他环境参考：
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
