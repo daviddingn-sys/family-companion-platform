@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { getRouteUser, requireElderInFamily, requireFamilyMember } from "@/lib/permissions";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getMonthRange } from "@/lib/validators/blood-pressure";
 
@@ -56,7 +57,7 @@ export async function GET(
   const format = request.nextUrl.searchParams.get("format") ?? "csv";
   const header = ["测量时间", "时段", "高压", "低压", "脉搏", "来源", "状态", "备注"];
   const rows = (data ?? []).map((record) => [
-    new Date(record.measured_at).toLocaleString("zh-CN"),
+    formatPlatformDateTime(record.measured_at),
     record.period,
     record.systolic,
     record.diastolic,
