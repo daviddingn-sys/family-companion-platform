@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { platformLocalMonthRangeToUtcIso } from "@/lib/platform-time";
 
 export const bloodPressureSchema = z.object({
   measuredAt: z.string().datetime("测量时间格式不正确"),
@@ -18,20 +19,5 @@ export const bloodPressureSchema = z.object({
 export type BloodPressureInput = z.infer<typeof bloodPressureSchema>;
 
 export function getMonthRange(month: string) {
-  if (!/^\d{4}-\d{2}$/.test(month)) {
-    return null;
-  }
-
-  const [year, monthNumber] = month.split("-").map(Number);
-  if (monthNumber < 1 || monthNumber > 12) {
-    return null;
-  }
-
-  const start = new Date(Date.UTC(year, monthNumber - 1, 1));
-  const end = new Date(Date.UTC(year, monthNumber, 1));
-
-  return {
-    start: start.toISOString(),
-    end: end.toISOString(),
-  };
+  return platformLocalMonthRangeToUtcIso(month);
 }
