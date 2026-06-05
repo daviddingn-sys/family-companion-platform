@@ -74,13 +74,17 @@ https://your-domain.vercel.app/**
 
 ## 5. Supabase Storage
 
-血压图片上传默认使用 `blood-pressure-images` bucket。首次部署时需要在 Supabase Storage 创建该 bucket。
+血压图片上传默认使用 `blood-pressure-images` bucket。服务端会在首次上传时尝试自动创建该 bucket，因此 `SUPABASE_SERVICE_ROLE_KEY` 必须配置正确。
 
-建议配置：
+自动创建时使用以下配置：
 
 - bucket 名称：`blood-pressure-images`
 - public：关闭
+- 文件大小上限：10MB
+- 允许类型：JPG、PNG、WebP
 - 文件访问：通过服务端签名 URL
+
+如果自动创建失败，可以在 Supabase Storage 手工创建同名 bucket，并保持 public 关闭。
 
 ## 6. Vercel 部署
 
