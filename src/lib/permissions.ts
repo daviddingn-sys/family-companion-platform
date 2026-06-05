@@ -51,6 +51,18 @@ export async function ensureProfile(user: User) {
   }
 }
 
+export async function ensureRouteProfile(user: User) {
+  try {
+    await ensureProfile(user);
+    return null;
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "用户资料初始化失败" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function getFamilyMembership(familyId: string, userId: string) {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
