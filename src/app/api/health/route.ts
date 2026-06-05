@@ -4,6 +4,7 @@ import { getMissingRequiredEnvKeys, optionalEnvKeys, requiredEnvKeys } from "@/l
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const requiredTables = [
   "profiles",
