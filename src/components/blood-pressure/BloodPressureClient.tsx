@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { requestJson } from "@/lib/client-http";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 
 type BloodPressureRecord = {
   id: string;
@@ -706,7 +707,7 @@ export function BloodPressureClient({
                     {record.systolic}/{record.diastolic} mmHg · 脉搏 {record.pulse}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(record.measured_at).toLocaleString("zh-CN")} · {periodLabels[record.period] ?? record.period} · {record.source}
+                    {formatPlatformDateTime(record.measured_at)} · {periodLabels[record.period] ?? record.period} · {record.source}
                   </p>
                   {record.image_key && (
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
