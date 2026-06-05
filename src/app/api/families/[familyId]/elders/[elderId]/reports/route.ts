@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { platformLocalDateEndExclusiveToUtcIso, platformLocalDateStartToUtcIso } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { healthReportSchema } from "@/lib/validators/health-report";
 
@@ -31,12 +32,6 @@ function countBy<T extends string>(values: T[]) {
     result[value] = (result[value] ?? 0) + 1;
     return result;
   }, {});
-}
-
-function endExclusive(date: string) {
-  const value = new Date(`${date}T00:00:00.000Z`);
-  value.setUTCDate(value.getUTCDate() + 1);
-  return value.toISOString();
 }
 
 function buildSummary({
@@ -158,8 +153,11 @@ export async function POST(
   }
 
   const { periodType, periodStart, periodEnd } = parsed.data;
-  const startAt = new Date(`${periodStart}T00:00:00.000Z`).toISOString();
-  const endAt = endExclusive(periodEnd);
+  const startAt = platformLocalDateStartToUtcIso(periodStart);
+  const endAt = platformLocalDateEndExclusiveToUtcIso(periodEnd);
+  if (!startAt || !endAt) {
+    return NextResponse.json({ error: "报告周期日期格式不正确" }, { status: 400 });
+  }
   const admin = createSupabaseAdminClient();
 
   const { data: existingReport, error: existingReportError } = await admin
