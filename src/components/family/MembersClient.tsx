@@ -111,6 +111,10 @@ export function MembersClient({
   }
 
   async function removeMember(memberId: string) {
+    if (!window.confirm("移除成员后，该成员将无法继续访问这个家庭，确定继续吗？")) {
+      return;
+    }
+
     setActionError("");
     const result = await requestJson(`/api/families/${familyId}/members/${memberId}`, {
       method: "DELETE",
