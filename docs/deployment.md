@@ -113,13 +113,19 @@ https://your-domain.vercel.app/api/health
   "status": "ready",
   "database": {
     "ok": true
-  }
+  },
+  "tables": [
+    {
+      "table": "profiles",
+      "ok": true
+    }
+  ]
 }
 ```
 
 如果缺少必要环境变量，会返回 `missing_required_env`。
 
-如果数据库不可用，会返回 `database_unavailable`。
+如果数据库不可用或迁移未跑完整，会返回 `database_unavailable`，并在 `database.failedTable` 标出失败的表。
 
 ## 8. 上线前验证
 
