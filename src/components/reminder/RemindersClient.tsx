@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { requestJson } from "@/lib/client-http";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 
 type Reminder = {
   id: string;
@@ -303,7 +304,7 @@ export function RemindersClient({
                 <div>
                   <p className="font-medium">{reminder.title}</p>
                   <p className="text-sm text-muted-foreground">
-                    {typeLabels[reminder.type]} · {statusLabels[reminder.status]} · {reminder.due_at ? new Date(reminder.due_at).toLocaleString("zh-CN") : "未设置时间"}
+                    {typeLabels[reminder.type]} · {statusLabels[reminder.status]} · {reminder.due_at ? formatPlatformDateTime(reminder.due_at) : "未设置时间"}
                   </p>
                   {reminder.repeat_rule && <p className="mt-1 text-sm">重复：{reminder.repeat_rule}</p>}
                   {reminder.note && <p className="mt-1 text-sm text-muted-foreground">{reminder.note}</p>}
