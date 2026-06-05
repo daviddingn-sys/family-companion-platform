@@ -170,10 +170,10 @@ export async function POST(
     .eq("period_type", periodType)
     .eq("period_start", periodStart)
     .eq("period_end", periodEnd)
-    .maybeSingle();
+    .limit(1);
 
   if (existingReportError) return NextResponse.json({ error: existingReportError.message }, { status: 500 });
-  if (existingReport) {
+  if ((existingReport?.length ?? 0) > 0) {
     return NextResponse.json({ error: "该周期健康报告已存在，请先删除原报告后重新生成" }, { status: 409 });
   }
 
