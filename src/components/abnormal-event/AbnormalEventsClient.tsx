@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { requestJson } from "@/lib/client-http";
-import { formatPlatformDateTime } from "@/lib/platform-time";
+import { formatPlatformDateTime, formatPlatformLocalMinuteInput } from "@/lib/platform-time";
 
 type AbnormalEvent = {
   id: string;
@@ -56,16 +56,11 @@ const statusLabels: Record<string, string> = {
 };
 
 function nowLocalInputValue() {
-  const date = new Date();
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  return formatPlatformLocalMinuteInput();
 }
 
 function toLocalInputValue(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return nowLocalInputValue();
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  return formatPlatformLocalMinuteInput(value) || nowLocalInputValue();
 }
 
 function emptyAbnormalEventForm() {
