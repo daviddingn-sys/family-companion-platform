@@ -58,7 +58,7 @@ export function platformLocalDateStartToUtcIso(date: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!match) return null;
 
-  return toUtcIsoFromPlatformLocal({
+  return platformLocalDateTimePartsToUtcIso({
     year: Number(match[1]),
     month: Number(match[2]),
     day: Number(match[3]),
@@ -76,7 +76,7 @@ export function platformLocalMinuteToUtcIso(value?: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/.exec(value?.trim() ?? "");
   if (!match) return null;
 
-  return toUtcIsoFromPlatformLocal({
+  return platformLocalDateTimePartsToUtcIso({
     year: Number(match[1]),
     month: Number(match[2]),
     day: Number(match[3]),
