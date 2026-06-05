@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -239,7 +240,7 @@ export default async function DashboardPage() {
                     <span className="font-medium">{reminder.title}</span>
                     <span className="ml-2 text-muted-foreground">
                       {reminderTypeLabels[reminder.type] ?? reminder.type} · {timingLabel} ·{" "}
-                      {dueAt ? dueAt.toLocaleString("zh-CN") : "未设置时间"}
+                      {dueAt ? formatPlatformDateTime(dueAt) : "未设置时间"}
                     </span>
                   </Link>
                 );
@@ -263,7 +264,7 @@ export default async function DashboardPage() {
                 >
                   <span className="font-medium">{event.title}</span>
                   <span className="ml-2 text-muted-foreground">
-                    {severityLabels[event.severity] ?? event.severity} · {new Date(event.occurred_at).toLocaleString("zh-CN")}
+                    {severityLabels[event.severity] ?? event.severity} · {formatPlatformDateTime(event.occurred_at)}
                   </span>
                 </Link>
               ))
