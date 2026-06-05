@@ -3,6 +3,8 @@ import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyR
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { medicationSchema } from "@/lib/validators/medication";
 
+const MAX_MEDICATIONS = 200;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string }> },
@@ -23,7 +25,8 @@ export async function GET(
     .select("*")
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(MAX_MEDICATIONS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ medications: data ?? [] });
