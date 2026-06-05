@@ -81,7 +81,16 @@ export async function getFamilyMembership(familyId: string, userId: string) {
 }
 
 export async function requireFamilyMember(familyId: string, userId: string) {
-  const membership = await getFamilyMembership(familyId, userId);
+  let membership: Awaited<ReturnType<typeof getFamilyMembership>>;
+  try {
+    membership = await getFamilyMembership(familyId, userId);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "家庭权限校验失败" },
+      { status: 500 },
+    );
+  }
+
   if (!membership) {
     return NextResponse.json({ error: "没有访问该家庭的权限。" }, { status: 403 });
   }
@@ -94,7 +103,16 @@ export async function requireFamilyRole(
   userId: string,
   allowedRoles: FamilyRole[],
 ) {
-  const membership = await getFamilyMembership(familyId, userId);
+  let membership: Awaited<ReturnType<typeof getFamilyMembership>>;
+  try {
+    membership = await getFamilyMembership(familyId, userId);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "家庭权限校验失败" },
+      { status: 500 },
+    );
+  }
+
   if (!membership || !allowedRoles.includes(membership.role)) {
     return NextResponse.json({ error: "当前角色没有执行该操作的权限。" }, { status: 403 });
   }
@@ -119,7 +137,16 @@ export async function getElderInFamily(familyId: string, elderId: string) {
 }
 
 export async function requireElderInFamily(familyId: string, elderId: string) {
-  const elder = await getElderInFamily(familyId, elderId);
+  let elder: Awaited<ReturnType<typeof getElderInFamily>>;
+  try {
+    elder = await getElderInFamily(familyId, elderId);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "老人档案校验失败" },
+      { status: 500 },
+    );
+  }
+
   if (!elder) {
     return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
   }
