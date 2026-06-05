@@ -90,10 +90,10 @@ export async function POST(request: NextRequest) {
     .eq("family_id", invitation.family_id)
     .eq("user_id", user.id)
     .neq("status", "removed")
-    .maybeSingle();
+    .limit(1);
 
   if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
-  if (existing) {
+  if ((existing?.length ?? 0) > 0) {
     return NextResponse.json({ error: "你已经是该家庭成员" }, { status: 409 });
   }
 
@@ -106,9 +106,12 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", invitation.id)
+    .eq("status", "invited")
+    .is("user_id", null)
     .select("id,family_id,role,relationship,status,joined_at")
     .single();
 
+  if (isNoRowsError(error)) return NextResponse.json({ error: "邀请不存在或已处理" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ member: data });
 }
