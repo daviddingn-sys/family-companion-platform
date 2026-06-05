@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isNoRowsError } from "@/lib/supabase/errors";
 
@@ -35,7 +36,7 @@ export async function GET(
       "",
       `- 报告类型：${data.period_type === "weekly" ? "周报" : "月报"}`,
       `- 周期：${data.period_start} 至 ${data.period_end}`,
-      `- 生成时间：${new Date(data.created_at).toLocaleString("zh-CN")}`,
+      `- 生成时间：${formatPlatformDateTime(data.created_at)}`,
       "",
       "## 规则化摘要",
       "",
