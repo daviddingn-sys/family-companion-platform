@@ -31,17 +31,17 @@ export function parseBloodPressureOCRResult(text: string): OCRResult {
       return { systolic: null, diastolic: null, pulse: null, error: String(parsed.error) };
     }
 
-    const systolic = parsed.systolic ? Number(parsed.systolic) : null;
-    const diastolic = parsed.diastolic ? Number(parsed.diastolic) : null;
-    const pulse = parsed.pulse ? Number(parsed.pulse) : null;
+    const systolic = parseOptionalNumber(parsed.systolic);
+    const diastolic = parseOptionalNumber(parsed.diastolic);
+    const pulse = parseOptionalNumber(parsed.pulse);
 
-    if (systolic && (systolic < 80 || systolic > 220)) {
+    if (systolic !== null && (systolic < 80 || systolic > 220)) {
       return { systolic: null, diastolic: null, pulse: null, error: "高压数值异常，请手动输入" };
     }
-    if (diastolic && (diastolic < 40 || diastolic > 140)) {
+    if (diastolic !== null && (diastolic < 40 || diastolic > 140)) {
       return { systolic: null, diastolic: null, pulse: null, error: "低压数值异常，请手动输入" };
     }
-    if (pulse && (pulse < 35 || pulse > 200)) {
+    if (pulse !== null && (pulse < 35 || pulse > 200)) {
       return { systolic: null, diastolic: null, pulse: null, error: "脉搏数值异常，请手动输入" };
     }
 
@@ -49,6 +49,12 @@ export function parseBloodPressureOCRResult(text: string): OCRResult {
   } catch {
     return { systolic: null, diastolic: null, pulse: null, error: "无法识别血压数据" };
   }
+}
+
+function parseOptionalNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 export async function recognizeBloodPressureImage(imageUrl: string): Promise<OCRResult> {
