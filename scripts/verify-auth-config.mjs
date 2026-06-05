@@ -53,7 +53,7 @@ async function waitForServer() {
     try {
       const response = await fetch(`${baseUrl}/login`);
       const html = await response.text();
-      if (response.status === 200 && html.includes("需要配置 Supabase")) {
+      if (response.status === 200 && html.includes("需要配置平台环境")) {
         pass();
         return;
       }
