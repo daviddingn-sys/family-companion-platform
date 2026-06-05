@@ -231,6 +231,12 @@ export const healthReports = pgTable(
   (table) => [
     index("health_reports_family_id_idx").on(table.familyId),
     index("health_reports_elder_id_idx").on(table.elderId),
-    index("health_reports_period_idx").on(table.periodType, table.periodStart, table.periodEnd),
+    uniqueIndex("health_reports_unique_period").on(
+      table.familyId,
+      table.elderId,
+      table.periodType,
+      table.periodStart,
+      table.periodEnd,
+    ),
   ],
 );
