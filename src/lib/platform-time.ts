@@ -101,3 +101,39 @@ export function platformLocalMonthRangeToUtcIso(month: string) {
 export function formatPlatformDateTime(value: string | Date) {
   return new Date(value).toLocaleString("zh-CN", { timeZone: PLATFORM_TIMEZONE });
 }
+
+function getPlatformDateTimeParts(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PLATFORM_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  const byType = new Map(parts.map((part) => [part.type, part.value]));
+  const year = byType.get("year");
+  const month = byType.get("month");
+  const day = byType.get("day");
+  const hour = byType.get("hour");
+  const minute = byType.get("minute");
+  if (!year || !month || !day || !hour || !minute) return null;
+
+  return { year, month, day, hour, minute };
+}
+
+export function formatPlatformLocalMinuteInput(value: string | Date = new Date()) {
+  const parts = getPlatformDateTimeParts(value);
+  if (!parts) return "";
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+
+export function getCurrentPlatformHour() {
+  const parts = getPlatformDateTimeParts(new Date());
+  return parts ? Number(parts.hour) : new Date().getHours();
+}
