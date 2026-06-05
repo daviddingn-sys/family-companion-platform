@@ -3,6 +3,8 @@ import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyR
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { healthReportSchema } from "@/lib/validators/health-report";
 
+const MAX_HEALTH_REPORTS = 120;
+
 type BloodPressureRecord = {
   systolic: number;
   diastolic: number;
@@ -127,7 +129,8 @@ export async function GET(
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
     .order("period_start", { ascending: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(MAX_HEALTH_REPORTS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ reports: data ?? [] });
