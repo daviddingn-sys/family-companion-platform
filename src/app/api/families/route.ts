@@ -3,6 +3,8 @@ import { familySchema } from "@/lib/validators/family";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensureProfile, getRouteUser } from "@/lib/permissions";
 
+const MAX_FAMILIES = 100;
+
 export async function GET() {
   const user = await getRouteUser();
   if (user instanceof NextResponse) {
@@ -16,7 +18,8 @@ export async function GET() {
     .select("role,status,families(id,name,owner_user_id,created_at,updated_at)")
     .eq("user_id", user.id)
     .eq("status", "active")
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(MAX_FAMILIES);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
