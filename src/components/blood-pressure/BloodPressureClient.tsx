@@ -134,6 +134,7 @@ export function BloodPressureClient({
   const [editingRecord, setEditingRecord] = useState<BloodPressureRecord | null>(null);
   const [editError, setEditError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
   const [editForm, setEditForm] = useState({
     measuredAt: defaultMeasuredAt(),
     period: defaultPeriod(),
@@ -295,7 +296,9 @@ export function BloodPressureClient({
     }
 
     setError("");
+    setDeletingId(recordId);
     const result = await requestJson(`${endpoint}/${recordId}`, { method: "DELETE" });
+    setDeletingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -725,12 +728,12 @@ export function BloodPressureClient({
                   {record.note && <p className="mt-1 text-sm">{record.note}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2 md:justify-end">
-                  <Button variant="outline" size="sm" onClick={() => startEdit(record)}>
+                  <Button variant="outline" size="sm" onClick={() => startEdit(record)} disabled={deletingId === record.id}>
                     <Pencil className="size-4" />
                     编辑
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => remove(record.id)}>
-                    删除
+                  <Button variant="outline" size="sm" onClick={() => remove(record.id)} disabled={deletingId === record.id}>
+                    {deletingId === record.id ? "删除中..." : "删除"}
                   </Button>
                 </div>
               </div>
