@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { familySchema } from "@/lib/validators/family";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { ensureProfile, getRouteUser } from "@/lib/permissions";
+import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
 
 const MAX_FAMILIES = 100;
 
@@ -11,7 +11,8 @@ export async function GET() {
     return user;
   }
 
-  await ensureProfile(user);
+  const profileError = await ensureRouteProfile(user);
+  if (profileError) return profileError;
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("family_members")
@@ -34,7 +35,8 @@ export async function POST(request: NextRequest) {
     return user;
   }
 
-  await ensureProfile(user);
+  const profileError = await ensureRouteProfile(user);
+  if (profileError) return profileError;
   const body = await request.json().catch(() => null);
   const parsed = familySchema.safeParse(body);
   if (!parsed.success) {
