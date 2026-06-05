@@ -77,6 +77,8 @@ export function RemindersClient({
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [editError, setEditError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
   const [form, setForm] = useState(emptyReminderForm);
   const [editForm, setEditForm] = useState(emptyReminderForm);
 
@@ -161,6 +163,7 @@ export function RemindersClient({
 
   async function updateStatus(reminder: Reminder, status: string) {
     setError("");
+    setStatusUpdatingId(reminder.id);
     const result = await requestJson(`${endpoint}/${reminder.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -173,6 +176,7 @@ export function RemindersClient({
         note: reminder.note ?? "",
       }),
     });
+    setStatusUpdatingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -186,7 +190,9 @@ export function RemindersClient({
     }
 
     setError("");
+    setDeletingId(reminderId);
     const result = await requestJson(`${endpoint}/${reminderId}`, { method: "DELETE" });
+    setDeletingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -306,7 +312,11 @@ export function RemindersClient({
                   {reminder.repeat_rule && <p className="mt-1 text-sm">重复：{reminder.repeat_rule}</p>}
                   {reminder.note && <p className="mt-1 text-sm text-muted-foreground">{reminder.note}</p>}
                 </div>
-                <Select value={reminder.status} onValueChange={(status) => updateStatus(reminder, status)}>
+                <Select
+                  value={reminder.status}
+                  onValueChange={(status) => updateStatus(reminder, status)}
+                  disabled={statusUpdatingId === reminder.id || deletingId === reminder.id}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -318,12 +328,12 @@ export function RemindersClient({
                   </SelectContent>
                 </Select>
                 <div className="flex flex-wrap gap-2 md:justify-end">
-                  <Button variant="outline" size="sm" onClick={() => startEdit(reminder)}>
+                  <Button variant="outline" size="sm" onClick={() => startEdit(reminder)} disabled={deletingId === reminder.id}>
                     <Pencil className="size-4" />
                     编辑
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => remove(reminder.id)}>
-                    删除
+                  <Button variant="outline" size="sm" onClick={() => remove(reminder.id)} disabled={deletingId === reminder.id}>
+                    {deletingId === reminder.id ? "删除中..." : "删除"}
                   </Button>
                 </div>
               </div>
