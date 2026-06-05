@@ -7,7 +7,7 @@ export const bloodPressureSchema = z.object({
   diastolic: z.coerce.number().int().min(40, "低压过低").max(140, "低压过高"),
   pulse: z.coerce.number().int().min(35, "脉搏过低").max(200, "脉搏过高"),
   imageKey: z.string().trim().optional(),
-  source: z.enum(["web", "manual", "ocr", "excel", "wechat"]).default("web"),
+  source: z.enum(["web", "manual", "ocr", "excel"]).default("web"),
   status: z.enum(["confirmed", "pending"]).default("confirmed"),
   note: z.string().trim().optional(),
 }).refine((data) => data.systolic > data.diastolic, {
