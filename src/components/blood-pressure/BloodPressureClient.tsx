@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { requestJson } from "@/lib/client-http";
-import { formatPlatformDateTime } from "@/lib/platform-time";
+import { formatPlatformDateTime, formatPlatformLocalMinuteInput, getCurrentPlatformHour, platformLocalMinuteToUtcIso } from "@/lib/platform-time";
 
 type BloodPressureRecord = {
   id: string;
@@ -93,21 +93,15 @@ function currentMonth() {
 }
 
 function defaultMeasuredAt() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  const local = new Date(now.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 16);
+  return formatPlatformLocalMinuteInput();
 }
 
 function toLocalInputValue(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return defaultMeasuredAt();
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  return formatPlatformLocalMinuteInput(value) || defaultMeasuredAt();
 }
 
 function defaultPeriod() {
-  const hour = new Date().getHours();
+  const hour = getCurrentPlatformHour();
   if (hour < 12) return "morning";
   if (hour < 17) return "noon";
   if (hour < 21) return "evening";
@@ -187,12 +181,18 @@ export function BloodPressureClient({
     setError("");
     setSaveMessage("");
     setSaving(true);
+    const measuredAt = platformLocalMinuteToUtcIso(form.measuredAt);
+    if (!measuredAt) {
+      setSaving(false);
+      setError("测量时间格式不正确");
+      return;
+    }
 
     const result = await requestJson<BloodPressureMutationResponse>(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        measuredAt: new Date(form.measuredAt).toISOString(),
+        measuredAt,
         period: form.period,
         systolic: form.systolic,
         diastolic: form.diastolic,
@@ -248,11 +248,18 @@ export function BloodPressureClient({
 
     setEditError("");
     setUpdating(true);
+    const measuredAt = platformLocalMinuteToUtcIso(editForm.measuredAt);
+    if (!measuredAt) {
+      setUpdating(false);
+      setEditError("测量时间格式不正确");
+      return;
+    }
+
     const result = await requestJson<BloodPressureMutationResponse>(`${endpoint}/${editingRecord.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        measuredAt: new Date(editForm.measuredAt).toISOString(),
+        measuredAt,
         period: editForm.period,
         systolic: editForm.systolic,
         diastolic: editForm.diastolic,
