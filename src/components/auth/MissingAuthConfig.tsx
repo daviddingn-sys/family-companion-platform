@@ -11,8 +11,8 @@ export function MissingAuthConfig({ missingKeys }: { missingKeys: string[] }) {
               <HeartPulse className="size-5" />
             </div>
             <div>
-              <CardTitle className="text-xl">需要配置 Supabase</CardTitle>
-              <p className="text-sm text-muted-foreground">当前本地环境缺少登录所需配置。</p>
+              <CardTitle className="text-xl">需要配置平台环境</CardTitle>
+              <p className="text-sm text-muted-foreground">当前环境缺少平台运行所需配置。</p>
             </div>
           </div>
         </CardHeader>
