@@ -1,0 +1,1 @@
+DROP TABLE "companion_messages" CASCADE;
