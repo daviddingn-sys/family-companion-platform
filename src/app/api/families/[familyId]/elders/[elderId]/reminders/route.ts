@@ -3,6 +3,8 @@ import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyR
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { reminderSchema } from "@/lib/validators/reminder";
 
+const MAX_REMINDERS = 300;
+
 function parseDueAt(value?: string) {
   const normalized = value?.trim().replace(" ", "T");
   if (!normalized) return null;
@@ -31,7 +33,8 @@ export async function GET(
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
     .order("due_at", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(MAX_REMINDERS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ reminders: data ?? [] });
