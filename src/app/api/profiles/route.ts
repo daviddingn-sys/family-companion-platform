@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ensureProfile, getRouteUser } from "@/lib/permissions";
+import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { profileSchema } from "@/lib/validators/profile";
 
@@ -7,7 +7,8 @@ export async function GET() {
   const user = await getRouteUser();
   if (user instanceof NextResponse) return user;
 
-  await ensureProfile(user);
+  const profileError = await ensureRouteProfile(user);
+  if (profileError) return profileError;
 
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
