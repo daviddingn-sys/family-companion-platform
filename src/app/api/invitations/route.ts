@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getRouteUser } from "@/lib/permissions";
+import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isNoRowsError } from "@/lib/supabase/errors";
 
@@ -18,6 +18,9 @@ async function getCurrentProfilePhone(userId: string) {
 export async function GET() {
   const user = await getRouteUser();
   if (user instanceof NextResponse) return user;
+
+  const ensuredProfile = await ensureRouteProfile(user);
+  if (ensuredProfile) return ensuredProfile;
 
   const email = user.email?.toLowerCase() ?? "";
   const { data: profile, error: profileError } = await getCurrentProfilePhone(user.id);
@@ -47,6 +50,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getRouteUser();
   if (user instanceof NextResponse) return user;
+
+  const ensuredProfile = await ensureRouteProfile(user);
+  if (ensuredProfile) return ensuredProfile;
 
   const body = await request.json().catch(() => null);
   const parsed = acceptInvitationSchema.safeParse(body);
