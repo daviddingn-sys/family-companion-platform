@@ -78,9 +78,21 @@ http://localhost:3100/api/health
 ```json
 {
   "ok": true,
-  "status": "ready"
+  "status": "ready",
+  "currentPhaseGuards": [
+    {
+      "ok": true,
+      "check": "companion_messages_absent"
+    },
+    {
+      "ok": true,
+      "check": "health_reports_ai_summary_absent"
+    }
+  ]
 }
 ```
+
+`currentPhaseGuards` 用于确认当前 Web 阶段没有残留 AI 陪伴表或 AI 健康总结字段。
 
 ## 5. 浏览器主流程
 
