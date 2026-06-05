@@ -4,6 +4,18 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
+const requiredTables = [
+  "profiles",
+  "families",
+  "family_members",
+  "elders",
+  "blood_pressure_records",
+  "medications",
+  "reminders",
+  "abnormal_events",
+  "health_reports",
+];
+
 export async function GET() {
   const missingRequiredEnv = getMissingRequiredEnvKeys();
   const optionalEnv = Object.fromEntries(
@@ -24,17 +36,29 @@ export async function GET() {
   }
 
   const admin = createSupabaseAdminClient();
-  const { error } = await admin.from("profiles").select("id", { count: "exact", head: true });
+  const tableChecks = await Promise.all(
+    requiredTables.map(async (table) => {
+      const { error } = await admin.from(table).select("id", { count: "exact", head: true });
+      return {
+        ok: !error,
+        table,
+        message: error?.message,
+      };
+    }),
+  );
+  const failedTable = tableChecks.find((check) => !check.ok);
 
-  if (error) {
+  if (failedTable) {
     return NextResponse.json(
       {
         ok: false,
         status: "database_unavailable",
         database: {
           ok: false,
-          message: error.message,
+          failedTable: failedTable.table,
+          message: failedTable.message,
         },
+        tables: tableChecks,
         optionalEnv,
       },
       { status: 503 },
@@ -47,6 +71,7 @@ export async function GET() {
     database: {
       ok: true,
     },
+    tables: tableChecks.map(({ table, ok }) => ({ table, ok })),
     optionalEnv,
   });
 }
