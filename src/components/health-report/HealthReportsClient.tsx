@@ -78,6 +78,7 @@ export function HealthReportsClient({
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
   const [form, setForm] = useState({
     periodType: "weekly",
     periodStart: initialRange.periodStart,
@@ -139,7 +140,9 @@ export function HealthReportsClient({
 
     setError("");
     setMessage("");
+    setDeletingId(reportId);
     const result = await requestJson(`${endpoint}/${reportId}`, { method: "DELETE" });
+    setDeletingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -236,8 +239,13 @@ export function HealthReportsClient({
                         下载
                       </a>
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => remove(report.id)}>
-                      删除
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => remove(report.id)}
+                      disabled={deletingId === report.id}
+                    >
+                      {deletingId === report.id ? "删除中..." : "删除"}
                     </Button>
                   </div>
                 </div>
