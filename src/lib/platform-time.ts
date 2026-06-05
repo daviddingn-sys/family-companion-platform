@@ -1,4 +1,5 @@
 const PLATFORM_TIMEZONE_OFFSET_MINUTES = 8 * 60;
+const PLATFORM_TIMEZONE = "Asia/Shanghai";
 const MS_PER_MINUTE = 60_000;
 const MS_PER_DAY = 86_400_000;
 
@@ -63,4 +64,8 @@ export function platformLocalMonthRangeToUtcIso(month: string) {
   const start = toUtcIsoFromPlatformLocal({ year, month: monthNumber, day: 1 });
   const end = toUtcIsoFromPlatformLocal({ year, month: monthNumber + 1, day: 1 });
   return { start, end };
+}
+
+export function formatPlatformDateTime(value: string | Date) {
+  return new Date(value).toLocaleString("zh-CN", { timeZone: PLATFORM_TIMEZONE });
 }
