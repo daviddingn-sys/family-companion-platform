@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { requestJson } from "@/lib/client-http";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 
 type HealthReport = {
   id: string;
@@ -229,7 +230,7 @@ export function HealthReportsClient({
                   <div>
                     <p className="font-medium">{report.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      {report.period_type === "weekly" ? "周报" : "月报"} · {report.period_start} 至 {report.period_end} · {new Date(report.created_at).toLocaleString("zh-CN")}
+                      {report.period_type === "weekly" ? "周报" : "月报"} · {report.period_start} 至 {report.period_end} · {formatPlatformDateTime(report.created_at)}
                     </p>
                   </div>
                   <div className="flex gap-2">
