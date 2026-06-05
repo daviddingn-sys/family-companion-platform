@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteFamilyButton } from "@/components/family/DeleteFamilyButton";
 import { FamilyForm } from "@/components/family/FamilyForm";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -24,17 +25,29 @@ export default async function FamilySettingsPage({
   );
 
   return (
-    <Card className="max-w-xl rounded-lg">
-      <CardHeader>
-        <CardTitle>家庭设置</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {membership.role === "owner" || membership.role === "admin" ? (
-          <FamilyForm familyId={family.id} initialName={family.name} />
-        ) : (
-          <p className="text-sm text-muted-foreground">只有家庭所有者和管理员可以修改家庭设置。</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="max-w-xl space-y-4">
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle>家庭设置</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {membership.role === "owner" || membership.role === "admin" ? (
+            <FamilyForm familyId={family.id} initialName={family.name} />
+          ) : (
+            <p className="text-sm text-muted-foreground">只有家庭所有者和管理员可以修改家庭设置。</p>
+          )}
+        </CardContent>
+      </Card>
+      {membership.role === "owner" && (
+        <Card className="rounded-lg border-destructive/30">
+          <CardHeader>
+            <CardTitle className="text-base">危险操作</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DeleteFamilyButton familyId={family.id} />
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
