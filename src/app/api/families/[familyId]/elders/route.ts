@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { elderSchema } from "@/lib/validators/elder";
 
+const MAX_ELDERS = 100;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> },
@@ -19,7 +21,8 @@ export async function GET(
     .from("elders")
     .select("*")
     .eq("family_id", familyId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(MAX_ELDERS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ elders: data ?? [] });
