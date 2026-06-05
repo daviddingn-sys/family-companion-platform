@@ -78,6 +78,13 @@
       "when": 1780622726275,
       "tag": "0010_drop_companion_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1780626000000,
+      "tag": "0011_restrict_blood_pressure_sources",
+      "breakpoints": true
     }
   ]
 }
