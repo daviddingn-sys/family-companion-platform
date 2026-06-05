@@ -41,17 +41,20 @@ type HealthReportsResponse = {
 };
 
 function toDateInputValue(date: Date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function defaultRange(periodType: string) {
   const now = new Date();
-  const end = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const start = new Date(end);
   if (periodType === "monthly") {
-    start.setUTCDate(1);
+    start.setDate(1);
   } else {
-    start.setUTCDate(start.getUTCDate() - 6);
+    start.setDate(start.getDate() - 6);
   }
   return {
     periodStart: toDateInputValue(start),
