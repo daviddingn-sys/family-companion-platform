@@ -92,6 +92,13 @@
       "when": 1780630000000,
       "tag": "0012_add_health_uniqueness_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1780631000000,
+      "tag": "0013_drop_redundant_health_report_period_idx",
+      "breakpoints": true
     }
   ]
 }
