@@ -9,17 +9,49 @@ function toUtcIsoFromPlatformLocal({
   day,
   hours = 0,
   minutes = 0,
+  seconds = 0,
 }: {
   year: number;
   month: number;
   day: number;
   hours?: number;
   minutes?: number;
+  seconds?: number;
 }) {
   const utcTime =
-    Date.UTC(year, month - 1, day, hours, minutes, 0, 0) -
+    Date.UTC(year, month - 1, day, hours, minutes, seconds, 0) -
     PLATFORM_TIMEZONE_OFFSET_MINUTES * MS_PER_MINUTE;
   return new Date(utcTime).toISOString();
+}
+
+export function platformLocalDateTimePartsToUtcIso({
+  year,
+  month,
+  day,
+  hours = 0,
+  minutes = 0,
+  seconds = 0,
+}: {
+  year: number;
+  month: number;
+  day: number;
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+}) {
+  const probe = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds, 0));
+  if (
+    probe.getUTCFullYear() !== year ||
+    probe.getUTCMonth() !== month - 1 ||
+    probe.getUTCDate() !== day ||
+    probe.getUTCHours() !== hours ||
+    probe.getUTCMinutes() !== minutes ||
+    probe.getUTCSeconds() !== seconds
+  ) {
+    return null;
+  }
+
+  return toUtcIsoFromPlatformLocal({ year, month, day, hours, minutes, seconds });
 }
 
 export function platformLocalDateStartToUtcIso(date: string) {
