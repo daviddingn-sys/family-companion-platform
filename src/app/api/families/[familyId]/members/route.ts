@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { memberInviteSchema } from "@/lib/validators/family";
 
+const MAX_FAMILY_MEMBERS = 200;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> },
@@ -20,7 +22,8 @@ export async function GET(
     .select("id,role,relationship,status,invited_email,invited_phone,joined_at,created_at,profiles(id,display_name,phone,avatar_url)")
     .eq("family_id", familyId)
     .neq("status", "removed")
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(MAX_FAMILY_MEMBERS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ members: data ?? [] });
