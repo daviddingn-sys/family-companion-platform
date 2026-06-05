@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { requestJson } from "@/lib/client-http";
+import { formatPlatformDateTime } from "@/lib/platform-time";
 
 type AbnormalEvent = {
   id: string;
@@ -338,7 +339,7 @@ export function AbnormalEventsClient({
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {eventTypeLabels[abnormalEvent.event_type]} · {statusLabels[abnormalEvent.status]} · {new Date(abnormalEvent.occurred_at).toLocaleString("zh-CN")}
+                    {eventTypeLabels[abnormalEvent.event_type]} · {statusLabels[abnormalEvent.status]} · {formatPlatformDateTime(abnormalEvent.occurred_at)}
                   </p>
                   {abnormalEvent.description && <p className="mt-1 text-sm text-muted-foreground">{abnormalEvent.description}</p>}
                   {abnormalEvent.related_blood_pressure_record_id && (
