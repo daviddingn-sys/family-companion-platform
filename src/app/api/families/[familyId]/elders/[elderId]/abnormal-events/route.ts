@@ -4,6 +4,8 @@ import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyR
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { abnormalEventSchema } from "@/lib/validators/abnormal-event";
 
+const MAX_ABNORMAL_EVENTS = 300;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string }> },
@@ -25,7 +27,8 @@ export async function GET(
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
     .order("occurred_at", { ascending: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(MAX_ABNORMAL_EVENTS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ abnormalEvents: data ?? [] });
