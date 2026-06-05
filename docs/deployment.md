@@ -123,6 +123,16 @@ https://your-domain.vercel.app/api/health
       "table": "profiles",
       "ok": true
     }
+  ],
+  "currentPhaseGuards": [
+    {
+      "check": "companion_messages_absent",
+      "ok": true
+    },
+    {
+      "check": "health_reports_ai_summary_absent",
+      "ok": true
+    }
   ]
 }
 ```
@@ -130,6 +140,8 @@ https://your-domain.vercel.app/api/health
 如果缺少必要环境变量，会返回 `missing_required_env`。
 
 如果数据库不可用或迁移未跑完整，会返回 `database_unavailable`，并在 `database.failedTable` 标出失败的表。
+
+如果当前阶段不应存在的 AI 陪伴表或 AI 健康总结字段仍残留，会返回 `current_phase_boundary_failed`。这通常表示数据库迁移没有执行完整，先运行 `pnpm db:migrate`。
 
 ## 9. 上线前验证
 
