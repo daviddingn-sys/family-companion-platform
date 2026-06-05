@@ -67,6 +67,8 @@ export function MedicationsClient({
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [editError, setEditError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
   const [form, setForm] = useState(emptyMedicationForm);
   const [editForm, setEditForm] = useState(emptyMedicationForm);
 
@@ -153,6 +155,7 @@ export function MedicationsClient({
 
   async function updateStatus(medication: Medication, status: string) {
     setError("");
+    setStatusUpdatingId(medication.id);
     const result = await requestJson(`${endpoint}/${medication.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -167,6 +170,7 @@ export function MedicationsClient({
         note: medication.note ?? "",
       }),
     });
+    setStatusUpdatingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -180,7 +184,9 @@ export function MedicationsClient({
     }
 
     setError("");
+    setDeletingId(medicationId);
     const result = await requestJson(`${endpoint}/${medicationId}`, { method: "DELETE" });
+    setDeletingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -310,6 +316,7 @@ export function MedicationsClient({
                 <Select
                   value={medication.status}
                   onValueChange={(status) => updateStatus(medication, status)}
+                  disabled={statusUpdatingId === medication.id || deletingId === medication.id}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -321,12 +328,12 @@ export function MedicationsClient({
                   </SelectContent>
                 </Select>
                 <div className="flex flex-wrap gap-2 md:justify-end">
-                  <Button variant="outline" size="sm" onClick={() => startEdit(medication)}>
+                  <Button variant="outline" size="sm" onClick={() => startEdit(medication)} disabled={deletingId === medication.id}>
                     <Pencil className="size-4" />
                     编辑
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => remove(medication.id)}>
-                    删除
+                  <Button variant="outline" size="sm" onClick={() => remove(medication.id)} disabled={deletingId === medication.id}>
+                    {deletingId === medication.id ? "删除中..." : "删除"}
                   </Button>
                 </div>
               </div>
