@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { healthReportSchema } from "@/lib/validators/health-report";
 
 const MAX_HEALTH_REPORTS = 120;
+const MAX_REPORT_RECORDS = 2000;
 
 type BloodPressureRecord = {
   systolic: number;
@@ -188,7 +189,8 @@ export async function POST(
       .eq("family_id", familyId)
       .eq("elder_id", elderId)
       .gte("measured_at", startAt)
-      .lt("measured_at", endAt),
+      .lt("measured_at", endAt)
+      .limit(MAX_REPORT_RECORDS + 1),
     admin
       .from("medications")
       .select("id", { count: "exact", head: true })
@@ -201,14 +203,16 @@ export async function POST(
       .eq("family_id", familyId)
       .eq("elder_id", elderId)
       .gte("due_at", startAt)
-      .lt("due_at", endAt),
+      .lt("due_at", endAt)
+      .limit(MAX_REPORT_RECORDS + 1),
     admin
       .from("abnormal_events")
       .select("severity,status")
       .eq("family_id", familyId)
       .eq("elder_id", elderId)
       .gte("occurred_at", startAt)
-      .lt("occurred_at", endAt),
+      .lt("occurred_at", endAt)
+      .limit(MAX_REPORT_RECORDS + 1),
   ]);
 
   const firstError =
@@ -217,6 +221,17 @@ export async function POST(
     reminderResult.error ??
     abnormalEventResult.error;
   if (firstError) return NextResponse.json({ error: firstError.message }, { status: 500 });
+
+  if (
+    (bloodPressureResult.data?.length ?? 0) > MAX_REPORT_RECORDS ||
+    (reminderResult.data?.length ?? 0) > MAX_REPORT_RECORDS ||
+    (abnormalEventResult.data?.length ?? 0) > MAX_REPORT_RECORDS
+  ) {
+    return NextResponse.json(
+      { error: `报告周期内数据超过 ${MAX_REPORT_RECORDS} 条，请缩小周期或清理异常数据后再生成` },
+      { status: 400 },
+    );
+  }
 
   const { summary, stats } = buildSummary({
     periodType,
