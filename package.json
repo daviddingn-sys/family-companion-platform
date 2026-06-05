@@ -9,9 +9,10 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "verify:auth-config": "node scripts/verify-auth-config.mjs",
+    "verify:db-migrations": "drizzle-kit check",
     "verify:product-boundaries": "node scripts/verify-product-boundaries.mjs",
     "verify:production-health": "node scripts/verify-production-health.mjs",
-    "verify:build": "pnpm verify:auth-config && pnpm verify:product-boundaries && pnpm typecheck && pnpm lint && pnpm build && pnpm verify:production-health",
+    "verify:build": "pnpm verify:auth-config && pnpm verify:product-boundaries && pnpm verify:db-migrations && pnpm typecheck && pnpm lint && pnpm build && pnpm verify:production-health",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
