@@ -92,6 +92,8 @@ export function AbnormalEventsClient({
   const [editingEvent, setEditingEvent] = useState<AbnormalEvent | null>(null);
   const [editError, setEditError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
   const [form, setForm] = useState(emptyAbnormalEventForm);
   const [editForm, setEditForm] = useState(emptyAbnormalEventForm);
 
@@ -177,6 +179,7 @@ export function AbnormalEventsClient({
 
   async function updateStatus(abnormalEvent: AbnormalEvent, status: string) {
     setError("");
+    setStatusUpdatingId(abnormalEvent.id);
     const result = await requestJson(`${endpoint}/${abnormalEvent.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -190,6 +193,7 @@ export function AbnormalEventsClient({
         relatedBloodPressureRecordId: abnormalEvent.related_blood_pressure_record_id ?? "",
       }),
     });
+    setStatusUpdatingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -203,7 +207,9 @@ export function AbnormalEventsClient({
     }
 
     setError("");
+    setDeletingId(eventId);
     const result = await requestJson(`${endpoint}/${eventId}`, { method: "DELETE" });
+    setDeletingId("");
     if (!result.ok) {
       setError(result.error);
       return;
@@ -341,7 +347,11 @@ export function AbnormalEventsClient({
                     <p className="mt-1 text-xs text-muted-foreground">关联血压记录：{abnormalEvent.related_blood_pressure_record_id}</p>
                   )}
                 </div>
-                <Select value={abnormalEvent.status} onValueChange={(status) => updateStatus(abnormalEvent, status)}>
+                <Select
+                  value={abnormalEvent.status}
+                  onValueChange={(status) => updateStatus(abnormalEvent, status)}
+                  disabled={statusUpdatingId === abnormalEvent.id || deletingId === abnormalEvent.id}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -352,12 +362,12 @@ export function AbnormalEventsClient({
                   </SelectContent>
                 </Select>
                 <div className="flex flex-wrap gap-2 md:justify-end">
-                  <Button variant="outline" size="sm" onClick={() => startEdit(abnormalEvent)}>
+                  <Button variant="outline" size="sm" onClick={() => startEdit(abnormalEvent)} disabled={deletingId === abnormalEvent.id}>
                     <Pencil className="size-4" />
                     编辑
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => remove(abnormalEvent.id)}>
-                    删除
+                  <Button variant="outline" size="sm" onClick={() => remove(abnormalEvent.id)} disabled={deletingId === abnormalEvent.id}>
+                    {deletingId === abnormalEvent.id ? "删除中..." : "删除"}
                   </Button>
                 </div>
               </div>
