@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { platformLocalMinuteToUtcIso } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { reminderSchema } from "@/lib/validators/reminder";
 
 const MAX_REMINDERS = 300;
 
 function parseDueAt(value?: string) {
-  const normalized = value?.trim().replace(" ", "T");
-  if (!normalized) return null;
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  if (!value?.trim()) return null;
+  return platformLocalMinuteToUtcIso(value);
 }
 
 export async function GET(
