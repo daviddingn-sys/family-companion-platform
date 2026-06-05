@@ -2,7 +2,6 @@ import { relations } from "drizzle-orm";
 import {
   abnormalEvents,
   bloodPressureRecords,
-  companionMessages,
   elders,
   families,
   familyMembers,
@@ -21,7 +20,6 @@ export const profileRelations = relations(profiles, ({ many }) => ({
   reminders: many(reminders),
   abnormalEvents: many(abnormalEvents),
   healthReports: many(healthReports),
-  companionMessages: many(companionMessages),
 }));
 
 export const familyRelations = relations(families, ({ one, many }) => ({
@@ -36,7 +34,6 @@ export const familyRelations = relations(families, ({ one, many }) => ({
   reminders: many(reminders),
   abnormalEvents: many(abnormalEvents),
   healthReports: many(healthReports),
-  companionMessages: many(companionMessages),
 }));
 
 export const familyMemberRelations = relations(familyMembers, ({ one }) => ({
@@ -64,7 +61,6 @@ export const elderRelations = relations(elders, ({ one, many }) => ({
   reminders: many(reminders),
   abnormalEvents: many(abnormalEvents),
   healthReports: many(healthReports),
-  companionMessages: many(companionMessages),
 }));
 
 export const bloodPressureRecordRelations = relations(bloodPressureRecords, ({ one, many }) => ({
@@ -143,23 +139,6 @@ export const healthReportRelations = relations(healthReports, ({ one }) => ({
   }),
   generator: one(profiles, {
     fields: [healthReports.generatedBy],
-    references: [profiles.id],
-  }),
-}));
-
-// Kept only so existing databases with this historical table keep their ORM
-// mapping. There is no current Web route or API using elder companion messages.
-export const companionMessageRelations = relations(companionMessages, ({ one }) => ({
-  family: one(families, {
-    fields: [companionMessages.familyId],
-    references: [families.id],
-  }),
-  elder: one(elders, {
-    fields: [companionMessages.elderId],
-    references: [elders.id],
-  }),
-  creator: one(profiles, {
-    fields: [companionMessages.createdBy],
     references: [profiles.id],
   }),
 }));
