@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ensureProfile, getRouteUser } from "@/lib/permissions";
+import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
 
 export async function GET() {
   const user = await getRouteUser();
@@ -7,7 +7,8 @@ export async function GET() {
     return user;
   }
 
-  await ensureProfile(user);
+  const profileError = await ensureRouteProfile(user);
+  if (profileError) return profileError;
 
   return NextResponse.json({
     user: {
