@@ -1,6 +1,15 @@
+import { platformLocalDateTimePartsToUtcIso } from "@/lib/platform-time";
 import { bloodPressureSchema } from "@/lib/validators/blood-pressure";
 
 type RawRow = Record<string, unknown>;
+type DateTimeParts = {
+  year: number;
+  month: number;
+  day: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
 
 export type ParsedBloodPressureRow = {
   rowNumber: number;
@@ -31,38 +40,41 @@ function findColumn(columns: string[], names: string[]) {
   return names.find((name) => columns.includes(name)) ?? null;
 }
 
-function createStrictDate(year: number, month: number, day: number, hours = 0, minutes = 0, seconds = 0) {
+function createStrictDateParts(year: number, month: number, day: number, hours = 0, minutes = 0, seconds = 0): DateTimeParts | null {
   if (month < 1 || month > 12 || day < 1 || hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
     return null;
   }
 
-  const date = new Date(year, month - 1, day, hours, minutes, seconds, 0);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day ||
-    date.getHours() !== hours ||
-    date.getMinutes() !== minutes ||
-    date.getSeconds() !== seconds
-  ) {
-    return null;
-  }
+  const iso = platformLocalDateTimePartsToUtcIso({ year, month, day, hours, minutes, seconds });
+  if (!iso) return null;
 
-  return date;
+  return { year, month, day, hours, minutes, seconds };
+}
+
+function dateToUtcParts(value: Date) {
+  if (Number.isNaN(value.getTime())) return null;
+  return createStrictDateParts(
+    value.getUTCFullYear(),
+    value.getUTCMonth() + 1,
+    value.getUTCDate(),
+    value.getUTCHours(),
+    value.getUTCMinutes(),
+    value.getUTCSeconds(),
+  );
 }
 
 function normalizeDate(value: unknown) {
   if (value == null || value === "") return null;
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (value instanceof Date) return dateToUtcParts(value);
   if (typeof value === "number") {
     const epoch = new Date(Date.UTC(1899, 11, 30));
-    return new Date(epoch.getTime() + value * 86_400_000);
+    return dateToUtcParts(new Date(epoch.getTime() + value * 86_400_000));
   }
 
   const text = String(value).trim().replace(/\//g, "-");
   const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
   if (match) {
-    return createStrictDate(
+    return createStrictDateParts(
       Number(match[1]),
       Number(match[2]),
       Number(match[3]),
@@ -73,7 +85,7 @@ function normalizeDate(value: unknown) {
   }
 
   const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  return dateToUtcParts(parsed);
 }
 
 function normalizeTime(value: unknown) {
@@ -99,14 +111,14 @@ function normalizeTime(value: unknown) {
   };
 }
 
-function normalizePeriod(value: unknown, measuredAt: Date): "morning" | "noon" | "evening" | "night" {
+function normalizePeriod(value: unknown, measuredAt: DateTimeParts): "morning" | "noon" | "evening" | "night" {
   const text = String(value ?? "").trim();
   if (["morning", "早", "早晨", "上午"].includes(text)) return "morning";
   if (["noon", "中", "中午", "午间"].includes(text)) return "noon";
   if (["evening", "晚", "晚上", "晚间"].includes(text)) return "evening";
   if (["night", "夜", "夜间"].includes(text)) return "night";
 
-  const hour = measuredAt.getHours();
+  const hour = measuredAt.hours;
   if (hour < 12) return "morning";
   if (hour < 17) return "noon";
   if (hour < 21) return "evening";
@@ -147,11 +159,18 @@ export function parseBloodPressureRows(rows: RawRow[]): ParsedBloodPressureRow[]
         return { rowNumber: index + 2, valid: false, error: "时间无法识别" };
       }
 
-      measuredDate.setHours(time.hours, time.minutes, 0, 0);
+      measuredDate.hours = time.hours;
+      measuredDate.minutes = time.minutes;
+      measuredDate.seconds = 0;
+    }
+
+    const measuredAt = platformLocalDateTimePartsToUtcIso(measuredDate);
+    if (!measuredAt) {
+      return { rowNumber: index + 2, valid: false, error: "日期无法识别" };
     }
 
     const payload = {
-      measuredAt: measuredDate.toISOString(),
+      measuredAt,
       period: normalizePeriod(colPeriod ? row[colPeriod] : null, measuredDate),
       systolic: Number(row[colSystolic]),
       diastolic: Number(row[colDiastolic]),
