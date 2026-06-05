@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { requestJson } from "@/lib/client-http";
-import { formatPlatformDateTime } from "@/lib/platform-time";
+import { formatPlatformDateTime, formatPlatformLocalMinuteInput } from "@/lib/platform-time";
 
 type Reminder = {
   id: string;
@@ -48,10 +48,7 @@ const statusLabels: Record<string, string> = {
 
 function toLocalInputValue(value: string | null) {
   if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16).replace("T", " ");
+  return formatPlatformLocalMinuteInput(value).replace("T", " ");
 }
 
 const emptyReminderForm = {
