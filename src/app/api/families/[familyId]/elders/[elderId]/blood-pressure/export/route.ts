@@ -4,6 +4,8 @@ import { getRouteUser, requireElderInFamily, requireFamilyMember } from "@/lib/p
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getMonthRange } from "@/lib/validators/blood-pressure";
 
+const MAX_EXPORT_ROWS = 5000;
+
 function csvEscape(value: unknown) {
   const text = String(value ?? "");
   if (/[",\n\r]/.test(text)) {
@@ -33,7 +35,8 @@ export async function GET(
     .select("measured_at,period,systolic,diastolic,pulse,source,status,note")
     .eq("family_id", familyId)
     .eq("elder_id", elderId)
-    .order("measured_at", { ascending: true });
+    .order("measured_at", { ascending: true })
+    .limit(MAX_EXPORT_ROWS + 1);
 
   if (month) {
     const range = getMonthRange(month);
@@ -43,6 +46,12 @@ export async function GET(
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if ((data?.length ?? 0) > MAX_EXPORT_ROWS) {
+    return NextResponse.json(
+      { error: `单次最多导出 ${MAX_EXPORT_ROWS} 条记录，请按月份筛选后再导出` },
+      { status: 400 },
+    );
+  }
 
   const format = request.nextUrl.searchParams.get("format") ?? "csv";
   const header = ["测量时间", "时段", "高压", "低压", "脉搏", "来源", "状态", "备注"];
