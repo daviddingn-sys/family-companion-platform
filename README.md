@@ -31,6 +31,10 @@
 - Tailwind CSS v4
 - shadcn/ui 基础组件
 
+## 时间口径
+
+平台当前按北京时间（Asia/Shanghai）作为家庭健康数据的自然日和自然月口径。数据库仍存 UTC 时间；月度血压筛选、报告周期、提醒时间、异常发生时间和服务端导出展示会统一转换到平台时间口径。
+
 ## 环境变量
 
 复制 `.env.local.example` 为 `.env.local` 并填写；`.env.example` 保留给部署平台或其他环境参考：
