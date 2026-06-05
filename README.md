@@ -63,6 +63,7 @@ pnpm typecheck
 pnpm lint
 pnpm build
 pnpm verify:auth-config
+pnpm verify:db-migrations
 pnpm verify:production-health
 pnpm verify:build
 pnpm db:generate
