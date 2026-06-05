@@ -8,6 +8,8 @@ const acceptInvitationSchema = z.object({
   memberId: z.string().uuid("邀请 ID 格式不正确"),
 });
 
+const MAX_INVITATIONS = 100;
+
 async function getCurrentProfilePhone(userId: string) {
   const admin = createSupabaseAdminClient();
   return admin.from("profiles").select("phone").eq("id", userId).maybeSingle();
@@ -35,7 +37,8 @@ export async function GET() {
     .select("id,role,relationship,status,invited_email,invited_phone,created_at,families(id,name)")
     .eq("status", "invited")
     .or(filters.join(","))
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(MAX_INVITATIONS);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ invitations: data ?? [] });
