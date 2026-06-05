@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRelatedBloodPressureRecord } from "@/lib/abnormal-events";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
+import { platformLocalMinuteToUtcIso } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { abnormalEventSchema } from "@/lib/validators/abnormal-event";
 
@@ -55,6 +56,11 @@ export async function POST(
   }
 
   const admin = createSupabaseAdminClient();
+  const occurredAt = platformLocalMinuteToUtcIso(parsed.data.occurredAt);
+  if (!occurredAt) {
+    return NextResponse.json({ error: "发生时间格式不正确" }, { status: 400 });
+  }
+
   const relatedRecord = await validateRelatedBloodPressureRecord({
     admin,
     familyId,
@@ -73,7 +79,7 @@ export async function POST(
       title: parsed.data.title,
       event_type: parsed.data.eventType,
       severity: parsed.data.severity,
-      occurred_at: new Date(parsed.data.occurredAt).toISOString(),
+      occurred_at: occurredAt,
       status: parsed.data.status,
       description: parsed.data.description || null,
       related_blood_pressure_record_id: parsed.data.relatedBloodPressureRecordId || null,
