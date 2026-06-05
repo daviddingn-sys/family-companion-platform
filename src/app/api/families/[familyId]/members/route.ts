@@ -67,10 +67,10 @@ export async function POST(
       .eq("family_id", familyId)
       .neq("status", "removed")
       .or(duplicateFilters.join(","))
-      .maybeSingle();
+      .limit(1);
 
     if (duplicateError) return NextResponse.json({ error: duplicateError.message }, { status: 500 });
-    if (duplicate) {
+    if ((duplicate?.length ?? 0) > 0) {
       return NextResponse.json({ error: "该成员已在家庭中或已有待处理邀请" }, { status: 409 });
     }
   }
