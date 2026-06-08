@@ -102,6 +102,8 @@ pnpm db:migrate
 
 本地浏览器验证按 [本地验证说明](docs/local-verification.md) 执行。
 
+人工验收按 [人工验收清单](docs/acceptance-checklist.md) 执行。
+
 部署后访问：
 
 ```bash
