@@ -74,7 +74,10 @@ pnpm db:migrate
 http://localhost:3000/**
 http://localhost:3100/**
 https://your-domain.vercel.app/**
+https://your-domain.vercel.app/auth/callback
 ```
+
+注册时应用会显式设置 `emailRedirectTo` 到当前域名的 `/auth/callback`。如果 Supabase Auth 的 Site URL 仍指向旧项目，或者 Redirect URLs 没有包含当前平台域名，邮箱验证链接可能跳到旧站。
 
 ## 6. Supabase Storage
 
