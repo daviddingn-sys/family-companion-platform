@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 import { HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +12,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type AuthMode = "login" | "register";
 
-export function AuthForm({ mode }: { mode: AuthMode }) {
+function AuthFormInner({ mode }: { mode: AuthMode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -21,6 +22,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const isLogin = mode === "login";
+  const verified = searchParams.get("verified") === "1";
+  const callbackFailed = searchParams.get("error") === "auth_callback_failed";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +39,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           password,
           options: {
             data: { display_name: displayName || email.split("@")[0] },
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/login%3Fverified%3D1`,
           },
         });
 
@@ -47,7 +51,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
 
     if (!isLogin && !result.data.session) {
-      setSuccessMessage("注册成功。请打开邮箱完成验证，验证后再返回登录。");
+      setSuccessMessage("注册成功。请打开邮箱完成验证，验证后会回到本平台登录页。");
       setPassword("");
       return;
     }
@@ -107,6 +111,16 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 required
               />
             </div>
+            {isLogin && verified && (
+              <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                邮箱验证已完成，请登录。
+              </p>
+            )}
+            {isLogin && callbackFailed && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                邮箱验证回调失败，请重新打开邮件链接或重新注册。
+              </p>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
             {successMessage && <p className="text-sm text-emerald-700">{successMessage}</p>}
             <Button className="w-full" type="submit" disabled={loading}>
@@ -125,5 +139,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function AuthForm({ mode }: { mode: AuthMode }) {
+  return (
+    <Suspense fallback={null}>
+      <AuthFormInner mode={mode} />
+    </Suspense>
   );
 }
