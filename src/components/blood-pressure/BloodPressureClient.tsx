@@ -514,15 +514,15 @@ export function BloodPressureClient({
             onChange={(event) => setMonth(event.target.value)}
           />
           <Button asChild variant="outline">
-            <a href={`${endpoint}/export?month=${month}`}>
+            <a href={`${endpoint}/export?month=${month}&format=xlsx`}>
               <Download className="size-4" />
-              导出 CSV
+              导出明细表
             </a>
           </Button>
           <Button asChild variant="outline">
-            <a href={`${endpoint}/export?month=${month}&format=xlsx`}>
+            <a href={`${endpoint}/export?month=${month}&format=calendar`}>
               <Download className="size-4" />
-              导出 Excel
+              导出月历版
             </a>
           </Button>
         </div>
