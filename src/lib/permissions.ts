@@ -40,7 +40,7 @@ export async function ensureProfile(user: User) {
       user.user_metadata?.display_name ??
       user.phone ??
       "家庭成员",
-    phone: user.phone ?? null,
+    phone: user.phone ?? user.user_metadata?.phone ?? null,
     avatar_url: user.user_metadata?.avatar_url ?? null,
     updated_at: new Date().toISOString(),
   };
