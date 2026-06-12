@@ -6,12 +6,12 @@
 - 已执行 `pnpm verify:build`
 - 线上或本地 `/api/health` 返回 `ok: true` 和 `status: "ready"`
 - `currentPhaseGuards` 中所有项目均为 `ok: true`
-- Supabase Auth 已配置 Site URL 和 Redirect URLs
+- Supabase Auth 已开启 Phone 登录，并已配置短信服务商
 
 ## 账户流程
 
-1. 打开 `/register`，注册一个新账号。
-2. 完成邮箱验证后打开 `/login` 登录。
+1. 打开 `/register`，使用中国大陆手机号注册一个新账号。
+2. 按短信提示完成验证后打开 `/login` 登录。
 3. 登录后应进入 `/dashboard`。
 4. 打开 `/profile`，填写或修改显示名称和手机号。
 5. 退出登录后重新登录，确认会话正常恢复。
@@ -20,8 +20,8 @@
 
 1. 打开 `/families/new`，创建一个家庭。
 2. 打开家庭详情页，确认家庭名称、成员数量、老人档案数量正常显示。
-3. 打开成员页，邀请一个邮箱或手机号。
-4. 使用匹配邮箱或手机号的第二个账号登录，打开 `/invitations` 接受邀请。
+3. 打开成员页，邀请一个手机号。
+4. 使用匹配手机号的第二个账号登录，打开 `/invitations` 接受邀请。
 5. 回到第一个账号，确认成员列表出现新成员。
 6. 调整成员角色，确认 owner/admin 权限限制符合预期。
 
