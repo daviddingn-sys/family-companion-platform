@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestJson } from "@/lib/client-http";
+import { formatChinaPhone } from "@/lib/phone";
 
 type Profile = {
   display_name: string | null;
@@ -18,7 +19,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [form, setForm] = useState({
     displayName: profile.display_name ?? "",
-    phone: profile.phone ?? "",
+    phone: formatChinaPhone(profile.phone),
     avatarUrl: profile.avatar_url ?? "",
   });
   const [error, setError] = useState("");
@@ -64,8 +65,11 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <Label htmlFor="phone">手机号</Label>
             <Input
               id="phone"
+              type="tel"
+              inputMode="tel"
               value={form.phone}
               onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+              placeholder="13800138000"
             />
           </div>
           <div className="space-y-2">
