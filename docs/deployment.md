@@ -64,20 +64,11 @@ pnpm db:migrate
 
 在 Supabase Auth 中确认：
 
-- Email 登录已开启
-- Site URL 设置为线上域名
-- Redirect URLs 包含线上域名和本地开发域名
+- Phone 登录已开启
+- 已配置可用的短信服务商
+- 用户手机号使用 E.164 格式存储，例如 `+8613800138000`
 
-建议加入：
-
-```text
-http://localhost:3000/**
-http://localhost:3100/**
-https://your-domain.vercel.app/**
-https://your-domain.vercel.app/auth/callback
-```
-
-注册时应用会显式设置 `emailRedirectTo` 到当前域名的 `/auth/callback`。如果 Supabase Auth 的 Site URL 仍指向旧项目，或者 Redirect URLs 没有包含当前平台域名，邮箱验证链接可能跳到旧站。
+前端会把中国大陆 11 位手机号自动转换为 `+86` 格式后提交给 Supabase Auth。当前平台不再使用邮箱注册、邮箱验证和 `/auth/callback` 回调。
 
 ## 6. Supabase Storage
 
