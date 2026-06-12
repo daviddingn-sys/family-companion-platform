@@ -13,8 +13,8 @@ export async function GET() {
   return NextResponse.json({
     user: {
       id: user.id,
-      phone: user.phone,
-      displayName: user.user_metadata?.display_name ?? user.phone,
+      phone: user.phone ?? user.user_metadata?.phone,
+      displayName: user.user_metadata?.display_name ?? user.phone ?? user.user_metadata?.phone,
     },
   });
 }
