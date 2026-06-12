@@ -118,6 +118,7 @@ function createCalendarWorksheet(records: ExportRecord[], month: string) {
   worksheet["!freeze"] = { xSplit: 0, ySplit: 2 };
   worksheet["!pageSetup"] = { orientation: "landscape", fitToWidth: 1, fitToHeight: 1 };
 
+  // xlsx 社区版对样式写入是尽力支持；月历结构主要依赖合并标题、列宽、行高和换行文本。
   for (const cellAddress of Object.keys(worksheet)) {
     if (cellAddress.startsWith("!")) continue;
     worksheet[cellAddress].s = {
