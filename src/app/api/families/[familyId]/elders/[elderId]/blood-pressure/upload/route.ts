@@ -7,7 +7,7 @@ import {
 import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MIME_BY_EXTENSION: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
@@ -54,7 +54,7 @@ export async function POST(
   }
 
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return NextResponse.json({ error: "图片不能超过 8MB" }, { status: 400 });
+    return NextResponse.json({ error: "图片不能超过 10MB" }, { status: 400 });
   }
 
   const key = createBloodPressureImageKey({ familyId, elderId, fileName: file.name });
