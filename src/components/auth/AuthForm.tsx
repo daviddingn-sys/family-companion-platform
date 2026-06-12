@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { normalizeChinaPhoneToE164 } from "@/lib/phone";
+import { requestJson } from "@/lib/client-http";
+import { normalizeChinaPhoneToE164, phoneToAuthEmail } from "@/lib/phone";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type AuthMode = "login" | "register";
@@ -26,8 +27,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     if (/invalid login credentials/i.test(message)) {
       return "手机号或密码不正确。";
     }
-    if (/signup|signups|not allowed|disabled|phone/i.test(message)) {
-      return isLogin ? "该手机号尚未注册或未启用手机号密码登录。" : "当前项目尚未允许手机号注册，请检查 Supabase Auth 配置。";
+    if (/signup|signups|not allowed|disabled/i.test(message)) {
+      return "当前项目尚未允许账号注册，请检查 Supabase Auth 配置。";
     }
     return message;
   }
@@ -43,18 +44,36 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
 
     setLoading(true);
-    const supabase = createSupabaseBrowserClient();
     const displayNameValue = displayName.trim() || phone.trim();
 
-    const result = isLogin
-      ? await supabase.auth.signInWithPassword({ phone: normalizedPhone, password })
-      : await supabase.auth.signUp({
+    if (!isLogin) {
+      const registerResult = await requestJson("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: normalizedPhone, password, displayName: displayNameValue }),
+      });
+
+      if (!registerResult.ok) {
+        setLoading(false);
+        setError(registerResult.error);
+        return;
+      }
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const result = await supabase.auth.signInWithPassword({
+      email: phoneToAuthEmail(normalizedPhone),
+      password,
+    });
+
+    if (!result.error && result.data.user && !isLogin) {
+      await supabase.auth.updateUser({
+        data: {
+          display_name: displayNameValue,
           phone: normalizedPhone,
-          password,
-          options: {
-            data: { display_name: displayNameValue },
-          },
-        });
+        },
+      });
+    }
 
     setLoading(false);
 
