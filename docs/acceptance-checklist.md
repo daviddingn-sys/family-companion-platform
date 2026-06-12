@@ -6,7 +6,8 @@
 - 已执行 `pnpm verify:build`
 - 线上或本地 `/api/health` 返回 `ok: true` 和 `status: "ready"`
 - `currentPhaseGuards` 中所有项目均为 `ok: true`
-- Supabase Auth 已开启 Phone 登录和 Password 登录
+- Supabase Auth 已开启 Email 登录
+- `SUPABASE_SERVICE_ROLE_KEY` 已配置，用于服务端创建手机号账号
 
 ## 账户流程
 
