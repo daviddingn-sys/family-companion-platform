@@ -13,9 +13,8 @@ export async function GET() {
   return NextResponse.json({
     user: {
       id: user.id,
-      email: user.email,
       phone: user.phone,
-      displayName: user.user_metadata?.display_name ?? user.email?.split("@")[0],
+      displayName: user.user_metadata?.display_name ?? user.phone,
     },
   });
 }
