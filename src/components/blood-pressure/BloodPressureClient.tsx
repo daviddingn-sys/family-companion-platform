@@ -91,6 +91,9 @@ const chartMetrics = [
   { key: "pulse", label: "脉搏", color: "#059669" },
 ] as const;
 
+const MAX_UPLOAD_IMAGE_DIMENSION = 1600;
+const COMPRESSED_IMAGE_QUALITY = 0.82;
+
 function currentMonth() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -110,6 +113,50 @@ function defaultPeriod() {
   if (hour < 17) return "noon";
   if (hour < 21) return "evening";
   return "night";
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+  return new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, type, quality);
+  });
+}
+
+async function compressImageForUpload(file: File) {
+  if (!file.type.startsWith("image/") || file.type === "image/webp") {
+    return file;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = objectUrl;
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("图片读取失败，请重新选择图片"));
+    });
+
+    const scale = Math.min(1, MAX_UPLOAD_IMAGE_DIMENSION / Math.max(image.width, image.height));
+    if (scale >= 1 && file.size <= 2 * 1024 * 1024) {
+      return file;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await canvasToBlob(canvas, "image/jpeg", COMPRESSED_IMAGE_QUALITY);
+    if (!blob || blob.size >= file.size) {
+      return file;
+    }
+
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "blood-pressure";
+    return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 export function BloodPressureClient({
@@ -328,8 +375,17 @@ export function BloodPressureClient({
     if (!file) return;
     setError("");
     setUploading(true);
+    let uploadFile: File;
+    try {
+      uploadFile = await compressImageForUpload(file);
+    } catch (uploadError) {
+      setUploading(false);
+      setError(uploadError instanceof Error ? uploadError.message : "图片处理失败，请重新选择图片");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", uploadFile);
 
     const result = await requestJson<UploadResponse>(`${endpoint}/upload`, {
       method: "POST",
