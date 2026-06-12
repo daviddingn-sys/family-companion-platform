@@ -38,7 +38,7 @@ export async function ensureProfile(user: User) {
     id: user.id,
     display_name:
       user.user_metadata?.display_name ??
-      user.email?.split("@")[0] ??
+      user.phone ??
       "家庭成员",
     phone: user.phone ?? null,
     avatar_url: user.user_metadata?.avatar_url ?? null,
