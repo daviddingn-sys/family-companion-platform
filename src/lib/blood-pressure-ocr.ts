@@ -19,6 +19,10 @@ const OCR_PROMPT = `你是一个血压计读数识别专家。请仔细观察这
 如果无法识别某项数据，对应字段填 null。如果完全无法识别血压计屏幕，返回：
 {"error": "无法识别血压数据"}`;
 
+export function isBloodPressureOCREnabled() {
+  return Boolean(process.env.COZE_WORKLOAD_IDENTITY_API_KEY);
+}
+
 export function parseBloodPressureOCRResult(text: string): OCRResult {
   try {
     const jsonMatch = text.match(/\{[^{}]*\}/);
