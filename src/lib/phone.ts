@@ -14,3 +14,7 @@ export function formatChinaPhone(value: string | null | undefined) {
   if (/^\+86\d{11}$/.test(value)) return value.slice(3);
   return value;
 }
+
+export function phoneToAuthEmail(normalizedPhone: string) {
+  return `${normalizedPhone.replace(/\D/g, "")}@phone.family-companion.local`;
+}
