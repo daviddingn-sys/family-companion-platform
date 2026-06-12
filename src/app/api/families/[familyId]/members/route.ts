@@ -19,7 +19,7 @@ export async function GET(
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("family_members")
-    .select("id,role,relationship,status,invited_email,invited_phone,joined_at,created_at,profiles(id,display_name,phone,avatar_url)")
+    .select("id,role,relationship,status,invited_phone,joined_at,created_at,profiles(id,display_name,phone,avatar_url)")
     .eq("family_id", familyId)
     .neq("status", "removed")
     .order("created_at", { ascending: true })
@@ -46,50 +46,37 @@ export async function POST(
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
   }
 
-  if (!parsed.data.email && !parsed.data.phone) {
-    return NextResponse.json({ error: "请输入邮箱或手机号" }, { status: 400 });
-  }
-
   if (membership.role !== "owner" && parsed.data.role === "admin") {
     return NextResponse.json({ error: "只有家庭所有者可以邀请管理员" }, { status: 403 });
   }
 
   const admin = createSupabaseAdminClient();
-  const email = parsed.data.email ? parsed.data.email.toLowerCase() : "";
-  const duplicateFilters = [];
-  if (email) duplicateFilters.push(`invited_email.eq.${email}`);
-  if (parsed.data.phone) duplicateFilters.push(`invited_phone.eq.${parsed.data.phone}`);
+  const { data: duplicate, error: duplicateError } = await admin
+    .from("family_members")
+    .select("id")
+    .eq("family_id", familyId)
+    .neq("status", "removed")
+    .eq("invited_phone", parsed.data.phone)
+    .limit(1);
 
-  if (duplicateFilters.length > 0) {
-    const { data: duplicate, error: duplicateError } = await admin
-      .from("family_members")
-      .select("id")
-      .eq("family_id", familyId)
-      .neq("status", "removed")
-      .or(duplicateFilters.join(","))
-      .limit(1);
-
-    if (duplicateError) return NextResponse.json({ error: duplicateError.message }, { status: 500 });
-    if ((duplicate?.length ?? 0) > 0) {
-      return NextResponse.json({ error: "该成员已在家庭中或已有待处理邀请" }, { status: 409 });
-    }
+  if (duplicateError) return NextResponse.json({ error: duplicateError.message }, { status: 500 });
+  if ((duplicate?.length ?? 0) > 0) {
+    return NextResponse.json({ error: "该手机号已在家庭中或已有待处理邀请" }, { status: 409 });
   }
 
-  if (parsed.data.phone) {
-    const { data: activeMemberByPhone, error: activeMemberByPhoneError } = await admin
-      .from("family_members")
-      .select("id,profiles!inner(phone)")
-      .eq("family_id", familyId)
-      .neq("status", "removed")
-      .eq("profiles.phone", parsed.data.phone)
-      .limit(1);
+  const { data: activeMemberByPhone, error: activeMemberByPhoneError } = await admin
+    .from("family_members")
+    .select("id,profiles!inner(phone)")
+    .eq("family_id", familyId)
+    .neq("status", "removed")
+    .eq("profiles.phone", parsed.data.phone)
+    .limit(1);
 
-    if (activeMemberByPhoneError) {
-      return NextResponse.json({ error: activeMemberByPhoneError.message }, { status: 500 });
-    }
-    if ((activeMemberByPhone?.length ?? 0) > 0) {
-      return NextResponse.json({ error: "该手机号对应的成员已在家庭中" }, { status: 409 });
-    }
+  if (activeMemberByPhoneError) {
+    return NextResponse.json({ error: activeMemberByPhoneError.message }, { status: 500 });
+  }
+  if ((activeMemberByPhone?.length ?? 0) > 0) {
+    return NextResponse.json({ error: "该手机号对应的成员已在家庭中" }, { status: 409 });
   }
 
   const { data, error } = await admin
@@ -100,10 +87,10 @@ export async function POST(
       role: parsed.data.role,
       relationship: parsed.data.relationship || null,
       status: "invited",
-      invited_email: email || null,
-      invited_phone: parsed.data.phone || null,
+      invited_email: null,
+      invited_phone: parsed.data.phone,
     })
-    .select("id,role,relationship,status,invited_email,invited_phone,created_at")
+    .select("id,role,relationship,status,invited_phone,created_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
