@@ -68,6 +68,10 @@ type OcrResponse = {
   };
 };
 
+type OcrStatusResponse = {
+  enabled?: boolean;
+};
+
 type ImportResponse = {
   inserted?: number;
   failed?: number;
@@ -128,6 +132,8 @@ export function BloodPressureClient({
   const [saveMessage, setSaveMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
+  const [ocrEnabled, setOcrEnabled] = useState(false);
+  const [ocrStatusLoaded, setOcrStatusLoaded] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const [imageKey, setImageKey] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -176,6 +182,18 @@ export function BloodPressureClient({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    async function run() {
+      const result = await requestJson<OcrStatusResponse>(`${endpoint}/ocr`);
+      if (result.ok) {
+        setOcrEnabled(Boolean(result.data.enabled));
+      }
+      setOcrStatusLoaded(true);
+    }
+
+    run();
+  }, [endpoint]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -340,6 +358,10 @@ export function BloodPressureClient({
   async function recognizeImage() {
     if (!imageKey) {
       setError("请先上传血压计照片");
+      return;
+    }
+    if (!ocrEnabled) {
+      setError("OCR 服务未配置，请先手动输入血压数值；照片仍会随记录保存。");
       return;
     }
 
@@ -616,8 +638,9 @@ export function BloodPressureClient({
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!imageKey || recognizing}
+                  disabled={!imageKey || recognizing || !ocrEnabled}
                   onClick={recognizeImage}
+                  title={ocrEnabled ? "识别血压计读数" : "OCR 未配置，请手动输入数值"}
                 >
                   {recognizing ? (
                     "识别中..."
@@ -639,7 +662,11 @@ export function BloodPressureClient({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                OCR 需要配置 COZE_WORKLOAD_IDENTITY_API_KEY；识别结果会填入高压、低压和脉搏输入框。
+                {ocrEnabled
+                  ? "OCR 识别结果会填入高压、低压和脉搏输入框，保存前仍可手动修改。"
+                  : ocrStatusLoaded
+                    ? "OCR 暂未配置，请手动输入高压、低压和脉搏；上传的照片仍会随记录保存。"
+                    : "正在检查 OCR 配置..."}
               </p>
             </div>
             {error && <p className="text-sm text-destructive md:col-span-6">{error}</p>}
