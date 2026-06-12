@@ -8,6 +8,21 @@ import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/per
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const MIME_BY_EXTENSION: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
+function getSupportedImageType(file: File) {
+  if (["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    return file.type;
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return MIME_BY_EXTENSION[extension] ?? null;
+}
 
 export async function POST(
   request: NextRequest,
@@ -33,7 +48,8 @@ export async function POST(
     return NextResponse.json({ error: "请选择图片" }, { status: 400 });
   }
 
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+  const contentType = getSupportedImageType(file);
+  if (!contentType) {
     return NextResponse.json({ error: "仅支持 JPG、PNG、WebP 图片" }, { status: 400 });
   }
 
@@ -62,7 +78,7 @@ export async function POST(
   const { error } = await admin.storage
     .from(BLOOD_PRESSURE_IMAGE_BUCKET)
     .upload(key, buffer, {
-      contentType: file.type,
+      contentType,
       upsert: false,
     });
 
