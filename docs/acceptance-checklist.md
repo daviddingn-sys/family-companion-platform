@@ -6,15 +6,14 @@
 - 已执行 `pnpm verify:build`
 - 线上或本地 `/api/health` 返回 `ok: true` 和 `status: "ready"`
 - `currentPhaseGuards` 中所有项目均为 `ok: true`
-- Supabase Auth 已开启 Phone 登录，并已配置短信服务商
+- Supabase Auth 已开启 Phone 登录和 Password 登录
 
 ## 账户流程
 
-1. 打开 `/register`，使用中国大陆手机号注册一个新账号。
-2. 点击获取验证码，输入短信验证码完成注册。
-3. 登录后应进入 `/dashboard`。
-4. 退出登录后打开 `/login`，再次使用手机号获取验证码并登录。
-5. 打开 `/profile`，填写或修改显示名称和手机号。
+1. 打开 `/register`，使用中国大陆手机号和密码注册一个新账号。
+2. 注册成功后应进入 `/dashboard`。
+3. 退出登录后打开 `/login`，再次使用手机号和密码登录，并确认进入 `/dashboard`。
+4. 打开 `/profile`，填写或修改显示名称和手机号。
 
 ## 家庭与成员
 
@@ -75,6 +74,7 @@
 - AI 聊天
 - AI 健康总结
 - 后台推送提醒调度
-- 国内短信 Send SMS Hook 正式接入
+- 自助找回密码
+- 国内短信服务接入
 - 智能硬件
 - 营销页面
