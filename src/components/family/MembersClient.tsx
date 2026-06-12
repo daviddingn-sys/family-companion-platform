@@ -13,7 +13,6 @@ type Member = {
   role: string;
   relationship: string | null;
   status: string;
-  invited_email: string | null;
   invited_phone: string | null;
   profiles: { display_name: string | null; phone: string | null } | null;
 };
@@ -45,7 +44,6 @@ export function MembersClient({
   currentRole: string;
 }) {
   const [members, setMembers] = useState<Member[]>([]);
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [relationship, setRelationship] = useState("");
   const [role, setRole] = useState("member");
@@ -82,14 +80,13 @@ export function MembersClient({
     const result = await requestJson(`/api/families/${familyId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, phone, relationship, role }),
+      body: JSON.stringify({ phone, relationship, role }),
     });
     setSaving(false);
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    setEmail("");
     setPhone("");
     setRelationship("");
     setRole("member");
@@ -130,7 +127,7 @@ export function MembersClient({
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">家庭成员</h1>
-        <p className="text-sm text-muted-foreground">支持按邮箱或手机号创建邀请，被邀请人登录后可在邀请页面接受。</p>
+        <p className="text-sm text-muted-foreground">按手机号创建邀请，被邀请人使用同一手机号登录后可在邀请页面接受。</p>
       </div>
       {canManage ? (
         <Card className="rounded-lg">
@@ -140,12 +137,8 @@ export function MembersClient({
           <CardContent>
             <form className="grid gap-3 md:grid-cols-4" onSubmit={invite}>
             <div className="space-y-2">
-              <Label>邮箱</Label>
-              <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" />
-            </div>
-            <div className="space-y-2">
               <Label>手机号</Label>
-              <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="可选" />
+              <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="13800138000" required />
             </div>
             <div className="space-y-2">
               <Label>关系</Label>
@@ -191,7 +184,7 @@ export function MembersClient({
             <CardContent className="grid gap-3 py-4 md:grid-cols-[1fr_180px_auto] md:items-center">
               <div>
                 <p className="font-medium">
-                  {member.profiles?.display_name ?? member.invited_email ?? member.invited_phone ?? "未命名成员"}
+                  {member.profiles?.display_name ?? member.invited_phone ?? "未命名成员"}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {member.relationship || "未填写关系"} · {roleLabels[member.role] ?? member.role} · {statusLabels[member.status] ?? member.status}
