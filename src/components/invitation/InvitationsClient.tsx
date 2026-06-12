@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requestJson } from "@/lib/client-http";
@@ -12,7 +12,6 @@ type Invitation = {
   id: string;
   role: string;
   relationship: string | null;
-  invited_email: string | null;
   invited_phone: string | null;
   created_at: string;
   families: {
@@ -86,7 +85,7 @@ export function InvitationsClient() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold">家庭邀请</h1>
-        <p className="text-sm text-muted-foreground">这里显示与当前账号邮箱或手机号匹配的待接受邀请。</p>
+        <p className="text-sm text-muted-foreground">这里显示与当前账号手机号匹配的待接受邀请。</p>
       </div>
 
       {acceptedFamilyId && (
@@ -105,7 +104,7 @@ export function InvitationsClient() {
       <Card className="rounded-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MailCheck className="size-4" />
+            <UserPlus className="size-4" />
             待处理邀请
           </CardTitle>
         </CardHeader>
@@ -123,7 +122,7 @@ export function InvitationsClient() {
                     {invitation.relationship || "未填写关系"} · {roleLabels[invitation.role] ?? invitation.role} · {formatPlatformDateTime(invitation.created_at)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {invitation.invited_email || invitation.invited_phone}
+                    {invitation.invited_phone}
                   </p>
                 </div>
                 <Button size="sm" onClick={() => accept(invitation.id)} disabled={acceptingId === invitation.id}>
