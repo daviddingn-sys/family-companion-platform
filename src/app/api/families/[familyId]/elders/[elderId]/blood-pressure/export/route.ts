@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { getRouteUser, requireElderInFamily, requireFamilyMember } from "@/lib/permissions";
 import { formatPlatformDateTime } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -118,7 +118,7 @@ function createCalendarWorksheet(records: ExportRecord[], month: string) {
   worksheet["!freeze"] = { xSplit: 0, ySplit: 2 };
   worksheet["!pageSetup"] = { orientation: "landscape", fitToWidth: 1, fitToHeight: 1 };
 
-  // xlsx 社区版对样式写入是尽力支持；月历结构主要依赖合并标题、列宽、行高和换行文本。
+  // xlsx-js-style keeps the SheetJS API while writing the cell styles needed for the calendar layout.
   for (const cellAddress of Object.keys(worksheet)) {
     if (cellAddress.startsWith("!")) continue;
     worksheet[cellAddress].s = {
