@@ -3,8 +3,27 @@ import {
   createBloodPressureImageSignedUrl,
   isBloodPressureImageKeyForElder,
 } from "@/lib/blood-pressure-image";
-import { recognizeBloodPressureImage } from "@/lib/blood-pressure-ocr";
+import { isBloodPressureOCREnabled, recognizeBloodPressureImage } from "@/lib/blood-pressure-ocr";
 import { getRouteUser, requireElderInFamily, requireFamilyRole } from "@/lib/permissions";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ familyId: string; elderId: string }> },
+) {
+  const { familyId, elderId } = await params;
+  const user = await getRouteUser();
+  if (user instanceof NextResponse) return user;
+
+  const membership = await requireFamilyRole(familyId, user.id, ["owner", "admin", "member"]);
+  if (membership instanceof NextResponse) return membership;
+
+  const elder = await requireElderInFamily(familyId, elderId);
+  if (elder instanceof NextResponse) return elder;
+
+  return NextResponse.json({
+    enabled: isBloodPressureOCREnabled(),
+  });
+}
 
 export async function POST(
   request: NextRequest,
