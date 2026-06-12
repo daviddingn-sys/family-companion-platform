@@ -22,24 +22,20 @@ export async function GET() {
   const ensuredProfile = await ensureRouteProfile(user);
   if (ensuredProfile) return ensuredProfile;
 
-  const email = user.email?.toLowerCase() ?? "";
   const { data: profile, error: profileError } = await getCurrentProfilePhone(user.id);
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
 
   const phone = profile?.phone ?? null;
-  const filters = email ? [`invited_email.eq.${email}`] : [];
-  if (phone) filters.push(`invited_phone.eq.${phone}`);
-
-  if (filters.length === 0) {
+  if (!phone) {
     return NextResponse.json({ invitations: [] });
   }
 
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("family_members")
-    .select("id,role,relationship,status,invited_email,invited_phone,created_at,families(id,name)")
+    .select("id,role,relationship,status,invited_phone,created_at,families(id,name)")
     .eq("status", "invited")
-    .or(filters.join(","))
+    .eq("invited_phone", phone)
     .order("created_at", { ascending: false })
     .limit(MAX_INVITATIONS);
 
@@ -60,7 +56,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
   }
 
-  const email = user.email?.toLowerCase() ?? "";
   const { data: profile, error: profileError } = await getCurrentProfilePhone(user.id);
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
 
@@ -68,7 +63,7 @@ export async function POST(request: NextRequest) {
   const admin = createSupabaseAdminClient();
   const { data: invitation, error: invitationError } = await admin
     .from("family_members")
-    .select("id,family_id,status,invited_email,invited_phone")
+    .select("id,family_id,status,invited_phone")
     .eq("id", parsed.data.memberId)
     .single();
 
@@ -78,9 +73,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "邀请不存在或已处理" }, { status: 404 });
   }
 
-  const emailMatches = invitation.invited_email?.toLowerCase() === email;
   const phoneMatches = Boolean(phone && invitation.invited_phone === phone);
-  if (!emailMatches && !phoneMatches) {
+  if (!phoneMatches) {
     return NextResponse.json({ error: "当前账号与邀请信息不匹配" }, { status: 403 });
   }
 
