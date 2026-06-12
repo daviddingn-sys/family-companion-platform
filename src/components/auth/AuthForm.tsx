@@ -1,45 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 import { HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { normalizeChinaPhoneToE164 } from "@/lib/phone";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type AuthMode = "login" | "register";
 
-function AuthFormInner({ mode }: { mode: AuthMode }) {
+export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const isLogin = mode === "login";
-  const verified = searchParams.get("verified") === "1";
-  const callbackFailed = searchParams.get("error") === "auth_callback_failed";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSuccessMessage("");
+
+    const normalizedPhone = normalizeChinaPhoneToE164(phone);
+    if (!normalizedPhone) {
+      setError("请输入有效的中国大陆手机号");
+      return;
+    }
+
     setLoading(true);
     const supabase = createSupabaseBrowserClient();
 
     const result = isLogin
-      ? await supabase.auth.signInWithPassword({ email, password })
+      ? await supabase.auth.signInWithPassword({ phone: normalizedPhone, password })
       : await supabase.auth.signUp({
-          email,
+          phone: normalizedPhone,
           password,
           options: {
-            data: { display_name: displayName || email.split("@")[0] },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/login%3Fverified%3D1`,
+            data: { display_name: displayName || phone },
           },
         });
 
@@ -51,7 +55,7 @@ function AuthFormInner({ mode }: { mode: AuthMode }) {
     }
 
     if (!isLogin && !result.data.session) {
-      setSuccessMessage("注册成功。请打开邮箱完成验证，验证后会回到本平台登录页。");
+      setSuccessMessage("注册成功。请按短信提示完成验证，验证后再登录。");
       setPassword("");
       return;
     }
@@ -71,7 +75,7 @@ function AuthFormInner({ mode }: { mode: AuthMode }) {
             <div>
               <CardTitle className="text-xl">家庭陪伴平台</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {isLogin ? "登录账户继续管理家庭档案" : "创建账户并建立家庭空间"}
+                {isLogin ? "使用手机号登录家庭档案" : "用手机号创建家庭空间"}
               </p>
             </div>
           </div>
@@ -90,13 +94,14 @@ function AuthFormInner({ mode }: { mode: AuthMode }) {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">邮箱</Label>
+              <Label htmlFor="phone">手机号</Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="name@example.com"
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="13800138000"
                 required
               />
             </div>
@@ -111,16 +116,6 @@ function AuthFormInner({ mode }: { mode: AuthMode }) {
                 required
               />
             </div>
-            {isLogin && verified && (
-              <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                邮箱验证已完成，请登录。
-              </p>
-            )}
-            {isLogin && callbackFailed && (
-              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                邮箱验证回调失败，请重新打开邮件链接或重新注册。
-              </p>
-            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
             {successMessage && <p className="text-sm text-emerald-700">{successMessage}</p>}
             <Button className="w-full" type="submit" disabled={loading}>
@@ -139,13 +134,5 @@ function AuthFormInner({ mode }: { mode: AuthMode }) {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-export function AuthForm({ mode }: { mode: AuthMode }) {
-  return (
-    <Suspense fallback={null}>
-      <AuthFormInner mode={mode} />
-    </Suspense>
   );
 }
