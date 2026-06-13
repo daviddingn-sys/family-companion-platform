@@ -84,8 +84,8 @@ export function InvitationsClient() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold">家庭邀请</h1>
-        <p className="text-sm text-muted-foreground">这里显示与当前账号手机号匹配的待接受邀请。</p>
+        <h1 className="text-2xl font-semibold">协作邀请</h1>
+        <p className="text-sm text-muted-foreground">这里显示与当前账号手机号匹配的待接受协作邀请。</p>
       </div>
 
       {acceptedFamilyId && (
@@ -105,14 +105,14 @@ export function InvitationsClient() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="size-4" />
-            待处理邀请
+            待处理协作邀请
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
             <p className="text-sm text-muted-foreground">加载中...</p>
           ) : invitations.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无待处理邀请。</p>
+            <p className="text-sm text-muted-foreground">暂无待处理协作邀请。</p>
           ) : (
             invitations.map((invitation) => (
               <div key={invitation.id} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_auto] md:items-center">
