@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requestJson } from "@/lib/client-http";
@@ -16,6 +15,12 @@ type FamilyMembership = {
     owner_user_id: string;
     created_at: string;
   };
+  familyMemberCount: number;
+  latestMemberUpdate: {
+    name: string;
+    created_at: string | null;
+    updated_at: string | null;
+  } | null;
 };
 
 type FamiliesResponse = {
@@ -26,13 +31,6 @@ export function FamiliesClient() {
   const [families, setFamilies] = useState<FamilyMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const roleLabels: Record<string, string> = {
-    owner: "所有者",
-    admin: "管理员",
-    member: "成员",
-    viewer: "只读",
-  };
 
   useEffect(() => {
     async function load() {
@@ -53,7 +51,7 @@ export function FamiliesClient() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">家庭管理</h1>
-          <p className="text-sm text-muted-foreground">每个健康数据后续都会归属到家庭和健康档案。</p>
+          <p className="text-sm text-muted-foreground">家庭列表只管理家庭空间，成员和健康数据进入家庭后处理。</p>
         </div>
         <Button asChild>
           <Link href="/families/new">
@@ -80,20 +78,28 @@ export function FamiliesClient() {
           {families.map((item) => (
             <Card key={item.families.id} className="rounded-lg">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between gap-2 text-lg">
-                  {item.families.name}
-                  <Badge variant="secondary">{roleLabels[item.role] ?? item.role}</Badge>
-                </CardTitle>
+                <CardTitle className="text-lg">{item.families.name}</CardTitle>
               </CardHeader>
-              <CardContent className="flex gap-2">
+              <CardContent className="space-y-4">
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">家庭成员：</span>
+                    <span className="font-medium">{item.familyMemberCount ?? 0}人</span>
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">最近更新：</span>
+                    {item.latestMemberUpdate ? (
+                      <span className="font-medium">
+                        {item.latestMemberUpdate.name}{" "}
+                        {(item.latestMemberUpdate.updated_at ?? item.latestMemberUpdate.created_at ?? "").slice(0, 10)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">暂无</span>
+                    )}
+                  </p>
+                </div>
                 <Button asChild size="sm">
-                  <Link href={`/families/${item.families.id}`}>进入</Link>
-                </Button>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/families/${item.families.id}/members`}>协作成员</Link>
-                </Button>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/families/${item.families.id}/elders`}>健康档案</Link>
+                  <Link href={`/families/${item.families.id}`}>进入家庭</Link>
                 </Button>
               </CardContent>
             </Card>
