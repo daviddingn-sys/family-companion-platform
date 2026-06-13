@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 
 const requiredTables = [
   "profiles",
+  "wechat_identities",
   "families",
   "family_members",
   "elders",
@@ -16,6 +17,7 @@ const requiredTables = [
   "reminders",
   "abnormal_events",
   "health_reports",
+  "operation_logs",
 ];
 
 async function queryDatabaseCatalog<T extends QueryResultRow>(query: string, values: string[]) {
