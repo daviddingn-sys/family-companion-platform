@@ -154,6 +154,7 @@ export default async function DashboardPage() {
       <div>
         <h1 className="text-2xl font-semibold">工作台</h1>
         <p className="text-sm text-muted-foreground">家庭、老人档案和健康数据的集中入口。</p>
+        <p className="text-xs text-muted-foreground">家庭成员不包含老人档案，老人按档案单独统计。</p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <MetricCard href={familiesHref} label="家庭数量" value={familyIds.length} />
