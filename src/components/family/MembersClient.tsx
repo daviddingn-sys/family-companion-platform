@@ -126,13 +126,13 @@ export function MembersClient({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">家庭成员</h1>
-        <p className="text-sm text-muted-foreground">这里显示已加入和待接受的家庭成员，不包含老人档案。</p>
+        <h1 className="text-2xl font-semibold">协作成员</h1>
+        <p className="text-sm text-muted-foreground">这里显示可登录和协助管理家庭数据的账号，不等同于健康档案里的家庭成员。</p>
       </div>
       {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       <Card className="rounded-lg">
         <CardHeader>
-          <CardTitle>成员列表</CardTitle>
+          <CardTitle>协作成员列表</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {loadError ? (
@@ -140,7 +140,7 @@ export function MembersClient({
           ) : loading ? (
             <p className="text-sm text-muted-foreground">加载中...</p>
           ) : members.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无家庭成员。</p>
+            <p className="text-sm text-muted-foreground">暂无协作成员。</p>
           ) : members.map((member) => (
             <div key={member.id} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_180px_auto] md:items-center">
               <div>
@@ -184,7 +184,7 @@ export function MembersClient({
       {canManage ? (
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>邀请成员</CardTitle>
+            <CardTitle>邀请协作成员</CardTitle>
           </CardHeader>
           <CardContent>
             <form className="grid gap-3 md:grid-cols-4" onSubmit={invite}>
