@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx-js-style";
+import { writeOperationLog } from "@/lib/operation-logs";
 import { getRouteUser, requireElderInFamily, requireFamilyMember } from "@/lib/permissions";
 import { formatPlatformDateTime } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -198,6 +199,21 @@ export async function GET(
       { status: 400 },
     );
   }
+
+  await writeOperationLog({
+    actorUserId: user.id,
+    familyId,
+    elderId,
+    action: "export",
+    resourceType: "blood_pressure_record",
+    source: "web",
+    request,
+    metadata: {
+      format,
+      month: month ?? null,
+      recordCount: data?.length ?? 0,
+    },
+  });
 
   if (format === "calendar") {
     if (!month) return NextResponse.json({ error: "月份格式应为 YYYY-MM" }, { status: 400 });
