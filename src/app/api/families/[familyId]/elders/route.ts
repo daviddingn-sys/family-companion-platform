@@ -51,6 +51,7 @@ export async function POST(
     .insert({
       family_id: familyId,
       name: parsed.data.name,
+      relationship: parsed.data.relationship || null,
       gender: parsed.data.gender,
       birth_date: parsed.data.birthDate || null,
       phone: parsed.data.phone || null,
