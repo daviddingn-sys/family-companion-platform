@@ -153,13 +153,13 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">工作台</h1>
-        <p className="text-sm text-muted-foreground">家庭、老人档案和健康数据的集中入口。</p>
-        <p className="text-xs text-muted-foreground">家庭成员不包含老人档案，老人按档案单独统计。</p>
+        <p className="text-sm text-muted-foreground">家庭、健康档案和健康数据的集中入口。</p>
+        <p className="text-xs text-muted-foreground">协作成员是可登录和协助管理的账号；健康档案对应每位需要记录健康数据的家庭成员。</p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <MetricCard href={familiesHref} label="家庭数量" value={familyIds.length} />
-        <MetricCard href={membersHref} label="成员数量" value={memberCount ?? 0} />
-        <MetricCard href={eldersHref} label="老人档案" value={elderCount ?? 0} />
+        <MetricCard href={membersHref} label="协作成员" value={memberCount ?? 0} />
+        <MetricCard href={eldersHref} label="健康档案" value={elderCount ?? 0} />
       </div>
       <div className="grid gap-3 md:grid-cols-5">
         <MetricCard href={elderModuleHref("blood-pressure")} label="近 30 天血压" value={bloodPressureCount ?? 0} />
@@ -171,11 +171,11 @@ export default async function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>老人档案</CardTitle>
+            <CardTitle>健康档案</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {(elders ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">暂无老人档案。</p>
+              <p className="text-sm text-muted-foreground">暂无健康档案。</p>
             ) : (
               (elders ?? []).map((elder) => (
                 <Link
