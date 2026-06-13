@@ -63,6 +63,29 @@ export const familyMembers = pgTable(
   ],
 );
 
+export const wechatIdentities = pgTable(
+  "wechat_identities",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull().references(() => profiles.id, {
+      onDelete: "cascade",
+    }),
+    appid: text("appid").notNull(),
+    openid: text("openid").notNull(),
+    unionid: text("unionid"),
+    nickname: text("nickname"),
+    avatarUrl: text("avatar_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("wechat_identities_user_id_idx").on(table.userId),
+    index("wechat_identities_unionid_idx").on(table.unionid),
+    uniqueIndex("wechat_identities_appid_openid_idx").on(table.appid, table.openid),
+  ],
+);
+
 export const elders = pgTable(
   "elders",
   {
@@ -85,6 +108,35 @@ export const elders = pgTable(
   },
   (table) => [
     index("elders_family_created_at_idx").on(table.familyId, table.createdAt),
+  ],
+);
+
+export const operationLogs = pgTable(
+  "operation_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorUserId: uuid("actor_user_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    familyId: uuid("family_id").references(() => families.id, {
+      onDelete: "set null",
+    }),
+    elderId: uuid("elder_id").references(() => elders.id, {
+      onDelete: "set null",
+    }),
+    action: text("action").notNull(),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id"),
+    source: text("source").notNull().default("web"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("operation_logs_actor_created_at_idx").on(table.actorUserId, table.createdAt),
+    index("operation_logs_family_created_at_idx").on(table.familyId, table.createdAt),
+    index("operation_logs_resource_idx").on(table.resourceType, table.resourceId),
   ],
 );
 
