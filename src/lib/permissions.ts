@@ -36,15 +36,13 @@ export async function ensureProfile(user: User) {
   const admin = createSupabaseAdminClient();
   const { data: existing, error: existingError } = await admin
     .from("profiles")
-    .select("id")
+    .select("id,display_name,phone,avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
   if (existingError) {
     throw existingError;
   }
-
-  if (existing) return;
 
   const profile = {
     id: user.id,
@@ -56,6 +54,26 @@ export async function ensureProfile(user: User) {
     avatar_url: user.user_metadata?.avatar_url ?? null,
     updated_at: new Date().toISOString(),
   };
+
+  if (existing) {
+    const patch = {
+      display_name: existing.display_name ?? profile.display_name,
+      phone: existing.phone ?? profile.phone,
+      avatar_url: existing.avatar_url ?? profile.avatar_url,
+      updated_at: profile.updated_at,
+    };
+
+    const shouldPatch =
+      patch.display_name !== existing.display_name ||
+      patch.phone !== existing.phone ||
+      patch.avatar_url !== existing.avatar_url;
+
+    if (shouldPatch) {
+      const { error } = await admin.from("profiles").update(patch).eq("id", user.id);
+      if (error) throw error;
+    }
+    return;
+  }
 
   const { error } = await admin.from("profiles").upsert(profile, { onConflict: "id" });
   if (error) {
