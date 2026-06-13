@@ -102,7 +102,7 @@ export default async function ElderPage({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{elder.name}</h1>
-          <p className="text-sm text-muted-foreground">老人档案详情</p>
+          <p className="text-sm text-muted-foreground">健康档案详情</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           <Button asChild variant="outline">
