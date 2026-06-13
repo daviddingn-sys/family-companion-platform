@@ -15,6 +15,7 @@ function isNotFutureDate(value: string | undefined) {
 export const elderSchema = z
   .object({
     name: z.string().trim().min(1, "请输入成员姓名").max(40, "姓名过长"),
+    relationship: z.string().trim().max(30, "称谓/关系过长").optional(),
     gender: z.enum(["male", "female", "other", "unknown"]).default("unknown"),
     birthDate: z.string().trim().optional().refine(isOptionalDateString, "出生日期格式应为 YYYY-MM-DD"),
     phone: z.string().trim().max(30, "手机号过长").optional(),
