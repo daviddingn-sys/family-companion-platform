@@ -78,7 +78,7 @@ export function ElderForm({
   return (
     <Card className="max-w-2xl rounded-lg">
       <CardHeader>
-        <CardTitle>{elder?.id ? "编辑老人档案" : "新增老人档案"}</CardTitle>
+        <CardTitle>{elder?.id ? "编辑健康档案" : "新增健康档案"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
