@@ -10,6 +10,7 @@ import { requestJson } from "@/lib/client-http";
 type Elder = {
   id: string;
   name: string;
+  relationship: string | null;
   gender: string;
   birth_date: string | null;
   phone: string | null;
@@ -51,12 +52,12 @@ export function EldersClient({ familyId }: { familyId: string }) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">健康档案</h1>
-          <p className="text-sm text-muted-foreground">给每位家庭成员建立专属健康档案，血压、用药、提醒和报告都会归属到具体成员。</p>
+          <p className="text-sm text-muted-foreground">每位家庭成员对应一个专属健康档案。</p>
         </div>
         <Button asChild>
           <Link href={`/families/${familyId}/elders/new`}>
             <Plus className="mr-2 size-4" />
-            新增档案
+            新增家庭成员
           </Link>
         </Button>
       </div>
@@ -67,9 +68,9 @@ export function EldersClient({ familyId }: { familyId: string }) {
       ) : elders.length === 0 ? (
         <Card>
           <CardContent className="py-8">
-            <p className="mb-4 text-sm text-muted-foreground">还没有健康档案。</p>
+            <p className="mb-4 text-sm text-muted-foreground">还没有家庭成员。</p>
             <Button asChild>
-              <Link href={`/families/${familyId}/elders/new`}>新增健康档案</Link>
+              <Link href={`/families/${familyId}/elders/new`}>新增家庭成员</Link>
             </Button>
           </CardContent>
         </Card>
@@ -82,7 +83,7 @@ export function EldersClient({ familyId }: { familyId: string }) {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  {genderLabels[elder.gender] ?? elder.gender} · {elder.birth_date || "未填写生日"} · {elder.phone || "未填写电话"}
+                  {elder.relationship || "未填写关系"} · {genderLabels[elder.gender] ?? elder.gender} · {elder.birth_date || "未填写生日"} · {elder.phone || "未填写电话"}
                 </p>
                 {elder.medical_notes && <p className="line-clamp-2 text-sm">{elder.medical_notes}</p>}
                 <Button asChild size="sm">
