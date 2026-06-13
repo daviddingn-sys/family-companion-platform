@@ -24,7 +24,7 @@ export default async function ProfilePage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">个人资料</h1>
-        <p className="text-sm text-muted-foreground">用于家庭成员展示和后续邀请识别。</p>
+        <p className="text-sm text-muted-foreground">用于协作成员展示和后续邀请识别。</p>
       </div>
       <ProfileForm profile={profile} />
       <PasswordForm />
