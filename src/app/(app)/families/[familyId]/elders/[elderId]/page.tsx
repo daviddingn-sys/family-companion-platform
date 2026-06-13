@@ -130,6 +130,7 @@ export default async function ElderPage({
           <CardTitle>基础信息</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm md:grid-cols-2">
+          <p>称谓/关系：{elder.relationship || "-"}</p>
           <p>性别：{genderLabels[elder.gender] ?? elder.gender}</p>
           <p>出生日期：{elder.birth_date || "-"}</p>
           <p>手机号：{elder.phone || "-"}</p>
