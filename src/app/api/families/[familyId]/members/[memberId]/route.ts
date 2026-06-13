@@ -34,7 +34,7 @@ export async function PATCH(
     .eq("family_id", familyId)
     .single();
 
-  if (isNoRowsError(targetError)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
+  if (isNoRowsError(targetError)) return NextResponse.json({ error: "协作成员不存在" }, { status: 404 });
   if (targetError) return NextResponse.json({ error: targetError.message }, { status: 500 });
   if (target.role === "owner") {
     return NextResponse.json({ error: "不能修改家庭所有者" }, { status: 400 });
@@ -52,7 +52,7 @@ export async function PATCH(
     .select("id,role,relationship,status")
     .single();
 
-  if (isNoRowsError(error)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
+  if (isNoRowsError(error)) return NextResponse.json({ error: "协作成员不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ member: data });
 }
@@ -76,7 +76,7 @@ export async function DELETE(
     .eq("family_id", familyId)
     .single();
 
-  if (isNoRowsError(targetError)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
+  if (isNoRowsError(targetError)) return NextResponse.json({ error: "协作成员不存在" }, { status: 404 });
   if (targetError) return NextResponse.json({ error: targetError.message }, { status: 500 });
   if (target.role === "owner") {
     return NextResponse.json({ error: "不能移除家庭所有者" }, { status: 400 });
@@ -94,7 +94,7 @@ export async function DELETE(
     .select("id")
     .single();
 
-  if (isNoRowsError(error)) return NextResponse.json({ error: "家庭成员不存在" }, { status: 404 });
+  if (isNoRowsError(error)) return NextResponse.json({ error: "协作成员不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
