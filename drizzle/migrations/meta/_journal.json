@@ -106,6 +106,13 @@
       "when": 1781353800000,
       "tag": "0014_add_health_member_relationship",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1781452800000,
+      "tag": "0015_add_identity_and_operation_logs",
+      "breakpoints": true
     }
   ]
 }
