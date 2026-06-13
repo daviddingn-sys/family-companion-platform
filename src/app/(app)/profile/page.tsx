@@ -1,3 +1,4 @@
+import { PasswordForm } from "@/components/profile/PasswordForm";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { requireUser } from "@/lib/auth";
 import { ensureProfile } from "@/lib/permissions";
@@ -26,6 +27,7 @@ export default async function ProfilePage() {
         <p className="text-sm text-muted-foreground">用于家庭成员展示和后续邀请识别。</p>
       </div>
       <ProfileForm profile={profile} />
+      <PasswordForm />
     </div>
   );
 }
