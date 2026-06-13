@@ -51,18 +51,18 @@ export default async function FamilyPage({
       <div className="grid gap-3 md:grid-cols-2">
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>家庭成员</CardTitle>
+            <CardTitle>协作成员</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-3xl font-semibold">{memberCountResult.count ?? 0}</p>
             <Button asChild>
-              <Link href={`/families/${familyId}/members`}>管理成员</Link>
+              <Link href={`/families/${familyId}/members`}>管理协作成员</Link>
             </Button>
           </CardContent>
         </Card>
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>老人档案</CardTitle>
+            <CardTitle>健康档案</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-3xl font-semibold">{elderCountResult.count ?? 0}</p>
