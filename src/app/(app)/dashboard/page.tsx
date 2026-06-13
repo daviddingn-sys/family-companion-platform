@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { formatPlatformDateTime } from "@/lib/platform-time";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -20,6 +19,27 @@ const reminderTypeLabels: Record<string, string> = {
   appointment: "就医",
   custom: "其他",
 };
+
+function MetricCard({
+  href,
+  label,
+  value,
+}: {
+  href: string;
+  label: string;
+  value: number;
+}) {
+  return (
+    <Link className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={href}>
+      <Card className="h-full rounded-lg transition-colors hover:border-primary hover:bg-accent/50">
+        <CardHeader>
+          <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-3xl font-semibold">{value}</CardContent>
+      </Card>
+    </Link>
+  );
+}
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -121,6 +141,13 @@ export default async function DashboardPage() {
   const elders = eldersResult.data ?? [];
   const upcomingReminders = upcomingRemindersResult.data ?? [];
   const recentAbnormalEvents = recentAbnormalEventsResult.data ?? [];
+  const primaryFamilyId = familyIds[0];
+  const primaryElder = elders[0];
+  const familiesHref = "/families";
+  const membersHref = primaryFamilyId ? `/families/${primaryFamilyId}/members` : familiesHref;
+  const eldersHref = primaryFamilyId ? `/families/${primaryFamilyId}/elders` : familiesHref;
+  const elderModuleHref = (module: "blood-pressure" | "medications" | "abnormal-events" | "reminders" | "reports") =>
+    primaryElder ? `/families/${primaryElder.family_id}/elders/${primaryElder.id}/${module}` : eldersHref;
 
   return (
     <div className="space-y-6">
@@ -129,75 +156,17 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">家庭、老人档案和健康数据的集中入口。</p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">家庭数量</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{familyIds.length}</CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">成员数量</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{memberCount ?? 0}</CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">老人档案</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{elderCount ?? 0}</CardContent>
-        </Card>
+        <MetricCard href={familiesHref} label="家庭数量" value={familyIds.length} />
+        <MetricCard href={membersHref} label="成员数量" value={memberCount ?? 0} />
+        <MetricCard href={eldersHref} label="老人档案" value={elderCount ?? 0} />
       </div>
       <div className="grid gap-3 md:grid-cols-5">
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">近 30 天血压</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{bloodPressureCount ?? 0}</CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">使用中用药</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{activeMedicationCount ?? 0}</CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">未解决异常</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{openAbnormalCount ?? 0}</CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">待处理提醒</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{activeReminderCount ?? 0}</CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">健康报告</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-semibold">{reportCount ?? 0}</CardContent>
-        </Card>
+        <MetricCard href={elderModuleHref("blood-pressure")} label="近 30 天血压" value={bloodPressureCount ?? 0} />
+        <MetricCard href={elderModuleHref("medications")} label="使用中用药" value={activeMedicationCount ?? 0} />
+        <MetricCard href={elderModuleHref("abnormal-events")} label="未解决异常" value={openAbnormalCount ?? 0} />
+        <MetricCard href={elderModuleHref("reminders")} label="待处理提醒" value={activeReminderCount ?? 0} />
+        <MetricCard href={elderModuleHref("reports")} label="健康报告" value={reportCount ?? 0} />
       </div>
-      <Card className="rounded-lg">
-        <CardHeader>
-          <CardTitle>快捷入口</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href="/families">管理家庭</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/families/new">创建家庭</Link>
-          </Button>
-          {familyIds[0] && (
-            <Button asChild variant="outline">
-              <Link href={`/families/${familyIds[0]}/elders`}>老人档案</Link>
-            </Button>
-          )}
-        </CardContent>
-      </Card>
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="rounded-lg">
           <CardHeader>
