@@ -156,7 +156,7 @@ export function HealthReportsClient({
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold">{elderName}的健康报告</h1>
-        <p className="text-sm text-muted-foreground">生成规则化周报/月报，帮助家庭成员定期查看健康数据。</p>
+        <p className="text-sm text-muted-foreground">生成规则化周报/月报，帮助家人定期查看健康数据。</p>
       </div>
 
       <Card className="rounded-lg">
