@@ -5,7 +5,11 @@ export const requiredEnvKeys = [
   "DATABASE_URL",
 ] as const;
 
-export const optionalEnvKeys = ["COZE_WORKLOAD_IDENTITY_API_KEY"] as const;
+export const optionalEnvKeys = [
+  "COZE_WORKLOAD_IDENTITY_API_KEY",
+  "WECHAT_MINIPROGRAM_APPID",
+  "WECHAT_MINIPROGRAM_SECRET",
+] as const;
 export const publicSupabaseEnvKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
