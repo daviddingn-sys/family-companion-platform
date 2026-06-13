@@ -53,7 +53,7 @@ export function FamiliesClient() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">家庭管理</h1>
-          <p className="text-sm text-muted-foreground">每个健康数据后续都会归属到家庭和老人档案。</p>
+          <p className="text-sm text-muted-foreground">每个健康数据后续都会归属到家庭和健康档案。</p>
         </div>
         <Button asChild>
           <Link href="/families/new">
@@ -90,10 +90,10 @@ export function FamiliesClient() {
                   <Link href={`/families/${item.families.id}`}>进入</Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link href={`/families/${item.families.id}/members`}>成员</Link>
+                  <Link href={`/families/${item.families.id}/members`}>协作成员</Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link href={`/families/${item.families.id}/elders`}>老人档案</Link>
+                  <Link href={`/families/${item.families.id}/elders`}>健康档案</Link>
                 </Button>
               </CardContent>
             </Card>
