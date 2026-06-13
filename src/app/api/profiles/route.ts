@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
+import { phoneToAuthEmail } from "@/lib/phone";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { profileSchema } from "@/lib/validators/profile";
 
@@ -32,13 +33,26 @@ export async function PATCH(request: NextRequest) {
   }
 
   const admin = createSupabaseAdminClient();
+  const { error: authError } = await admin.auth.admin.updateUserById(user.id, {
+    email: phoneToAuthEmail(parsed.data.phone),
+    email_confirm: true,
+    user_metadata: {
+      ...user.user_metadata,
+      display_name: parsed.data.displayName,
+      phone: parsed.data.phone,
+      avatar_url: parsed.data.avatarUrl || null,
+    },
+  });
+
+  if (authError) return NextResponse.json({ error: authError.message }, { status: 500 });
+
   const { data, error } = await admin
     .from("profiles")
     .upsert(
       {
         id: user.id,
         display_name: parsed.data.displayName,
-        phone: parsed.data.phone || null,
+        phone: parsed.data.phone,
         avatar_url: parsed.data.avatarUrl || null,
         updated_at: new Date().toISOString(),
       },
