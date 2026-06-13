@@ -99,6 +99,13 @@
       "when": 1780631000000,
       "tag": "0013_drop_redundant_health_report_period_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1781353800000,
+      "tag": "0014_add_health_member_relationship",
+      "breakpoints": true
     }
   ]
 }
