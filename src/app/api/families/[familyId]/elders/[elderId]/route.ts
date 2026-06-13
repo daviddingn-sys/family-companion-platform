@@ -23,7 +23,7 @@ export async function GET(
     .eq("id", elderId)
     .single();
 
-  if (isNoRowsError(error)) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
+  if (isNoRowsError(error)) return NextResponse.json({ error: "健康档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ elder: data });
 }
@@ -64,7 +64,7 @@ export async function PATCH(
     .select("*")
     .single();
 
-  if (isNoRowsError(error)) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
+  if (isNoRowsError(error)) return NextResponse.json({ error: "健康档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ elder: data });
 }
@@ -82,7 +82,7 @@ export async function DELETE(
 
   const body = await request.json().catch(() => null);
   if (body?.confirm !== "DELETE_ELDER") {
-    return NextResponse.json({ error: "删除老人档案需要确认" }, { status: 400 });
+    return NextResponse.json({ error: "删除健康档案需要确认" }, { status: 400 });
   }
 
   const admin = createSupabaseAdminClient();
@@ -94,7 +94,7 @@ export async function DELETE(
     .select("id")
     .single();
 
-  if (isNoRowsError(error)) return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
+  if (isNoRowsError(error)) return NextResponse.json({ error: "健康档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
