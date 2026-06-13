@@ -11,7 +11,7 @@ export function DeleteFamilyButton({ familyId }: { familyId: string }) {
   const [loading, setLoading] = useState(false);
 
   async function remove() {
-    if (!window.confirm("删除家庭会同时删除成员、老人档案和关联健康数据，确定继续吗？")) {
+    if (!window.confirm("删除家庭会同时删除成员、健康档案和关联健康数据，确定继续吗？")) {
       return;
     }
 
