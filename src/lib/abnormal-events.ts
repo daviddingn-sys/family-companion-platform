@@ -42,7 +42,7 @@ export async function validateRelatedBloodPressureRecord({
     return {
       ok: false as const,
       status: 400,
-      error: "关联血压记录不存在或不属于当前老人档案",
+      error: "关联血压记录不存在或不属于当前健康档案",
     };
   }
 
