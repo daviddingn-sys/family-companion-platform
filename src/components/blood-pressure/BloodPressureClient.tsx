@@ -560,7 +560,7 @@ export function BloodPressureClient({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{elderName}的血压记录</h1>
-          <p className="text-sm text-muted-foreground">当前模块已按家庭和老人档案隔离数据。</p>
+          <p className="text-sm text-muted-foreground">当前模块已按家庭和健康档案隔离数据。</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           <Input
