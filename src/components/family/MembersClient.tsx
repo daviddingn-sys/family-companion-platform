@@ -127,8 +127,60 @@ export function MembersClient({
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">家庭成员</h1>
-        <p className="text-sm text-muted-foreground">按手机号创建邀请，被邀请人使用同一手机号登录后可在邀请页面接受。</p>
+        <p className="text-sm text-muted-foreground">这里显示已加入和待接受的家庭成员，不包含老人档案。</p>
       </div>
+      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle>成员列表</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {loadError ? (
+            <p className="text-sm text-destructive">{loadError}</p>
+          ) : loading ? (
+            <p className="text-sm text-muted-foreground">加载中...</p>
+          ) : members.length === 0 ? (
+            <p className="text-sm text-muted-foreground">暂无家庭成员。</p>
+          ) : members.map((member) => (
+            <div key={member.id} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_180px_auto] md:items-center">
+              <div>
+                <p className="font-medium">
+                  {member.profiles?.display_name ?? member.invited_phone ?? "未命名成员"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {member.relationship || "未填写关系"} · {roleLabels[member.role] ?? member.role} · {statusLabels[member.status] ?? member.status}
+                </p>
+              </div>
+              {!canManage || member.role === "owner" || (!canManageAdmins && member.role === "admin") ? (
+                <p className="text-sm text-muted-foreground">{roleLabels[member.role] ?? member.role}</p>
+              ) : (
+                <Select
+                  value={member.role}
+                  onValueChange={(nextRole) => updateMember(member.id, { role: nextRole })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {canManageAdmins && <SelectItem value="admin">管理员</SelectItem>}
+                    <SelectItem value="member">成员</SelectItem>
+                    <SelectItem value="viewer">只读</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!canManage || member.role === "owner" || (!canManageAdmins && member.role === "admin")}
+                onClick={() => removeMember(member.id)}
+              >
+                移除
+              </Button>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
       {canManage ? (
         <Card className="rounded-lg">
           <CardHeader>
@@ -171,55 +223,6 @@ export function MembersClient({
           </CardContent>
         </Card>
       )}
-      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
-      <div className="grid gap-3">
-        {loadError ? (
-          <p className="text-sm text-destructive">{loadError}</p>
-        ) : loading ? (
-          <p className="text-sm text-muted-foreground">加载中...</p>
-        ) : members.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无家庭成员。</p>
-        ) : members.map((member) => (
-          <Card key={member.id} className="rounded-lg">
-            <CardContent className="grid gap-3 py-4 md:grid-cols-[1fr_180px_auto] md:items-center">
-              <div>
-                <p className="font-medium">
-                  {member.profiles?.display_name ?? member.invited_phone ?? "未命名成员"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {member.relationship || "未填写关系"} · {roleLabels[member.role] ?? member.role} · {statusLabels[member.status] ?? member.status}
-                </p>
-              </div>
-              {!canManage || member.role === "owner" || (!canManageAdmins && member.role === "admin") ? (
-                <p className="text-sm text-muted-foreground">{roleLabels[member.role] ?? member.role}</p>
-              ) : (
-                <Select
-                  value={member.role}
-                  onValueChange={(nextRole) => updateMember(member.id, { role: nextRole })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {canManageAdmins && <SelectItem value="admin">管理员</SelectItem>}
-                    <SelectItem value="member">成员</SelectItem>
-                    <SelectItem value="viewer">只读</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!canManage || member.role === "owner" || (!canManageAdmins && member.role === "admin")}
-                onClick={() => removeMember(member.id)}
-              >
-                移除
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
     </div>
   );
 }
