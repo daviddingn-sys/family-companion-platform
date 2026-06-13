@@ -61,7 +61,7 @@ export async function POST(
 
   if (duplicateError) return NextResponse.json({ error: duplicateError.message }, { status: 500 });
   if ((duplicate?.length ?? 0) > 0) {
-    return NextResponse.json({ error: "该手机号已在家庭中或已有待处理邀请" }, { status: 409 });
+    return NextResponse.json({ error: "该手机号已在家庭中或已有待处理协作邀请" }, { status: 409 });
   }
 
   const { data: activeMemberByPhone, error: activeMemberByPhoneError } = await admin
