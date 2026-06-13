@@ -13,6 +13,7 @@ import { requestJson } from "@/lib/client-http";
 type ElderFormData = {
   id?: string;
   name?: string;
+  relationship?: string | null;
   gender?: string;
   birth_date?: string | null;
   phone?: string | null;
@@ -38,6 +39,7 @@ export function ElderForm({
   const router = useRouter();
   const [form, setForm] = useState({
     name: elder?.name ?? "",
+    relationship: elder?.relationship ?? "",
     gender: elder?.gender ?? "unknown",
     birthDate: elder?.birth_date ?? "",
     phone: elder?.phone ?? "",
@@ -78,7 +80,7 @@ export function ElderForm({
   return (
     <Card className="max-w-2xl rounded-lg">
       <CardHeader>
-        <CardTitle>{elder?.id ? "编辑健康档案" : "新增健康档案"}</CardTitle>
+        <CardTitle>{elder?.id ? "编辑家庭成员" : "新增家庭成员"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
@@ -88,6 +90,14 @@ export function ElderForm({
               value={form.name}
               onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>称谓/关系</Label>
+            <Input
+              value={form.relationship}
+              onChange={(event) => setForm((current) => ({ ...current, relationship: event.target.value }))}
+              placeholder="本人/父亲/母亲/配偶/儿子"
             />
           </div>
           <div className="space-y-2">
