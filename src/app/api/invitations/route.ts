@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
   if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
   if ((existing?.length ?? 0) > 0) {
-    return NextResponse.json({ error: "你已经是该家庭成员" }, { status: 409 });
+    return NextResponse.json({ error: "你已经是该家庭的协作成员" }, { status: 409 });
   }
 
   const { data, error } = await admin
