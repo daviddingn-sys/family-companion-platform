@@ -71,6 +71,7 @@ export const elders = pgTable(
       onDelete: "cascade",
     }),
     name: text("name").notNull(),
+    relationship: text("relationship"),
     gender: text("gender").notNull().default("unknown"),
     birthDate: date("birth_date"),
     phone: text("phone"),
