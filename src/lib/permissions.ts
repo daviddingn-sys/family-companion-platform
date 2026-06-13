@@ -34,6 +34,18 @@ export async function getRouteUser(): Promise<User | NextResponse> {
 
 export async function ensureProfile(user: User) {
   const admin = createSupabaseAdminClient();
+  const { data: existing, error: existingError } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (existingError) {
+    throw existingError;
+  }
+
+  if (existing) return;
+
   const profile = {
     id: user.id,
     display_name:
