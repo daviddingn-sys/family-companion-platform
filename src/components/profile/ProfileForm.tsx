@@ -70,6 +70,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
               value={form.phone}
               onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
               placeholder="13800138000"
+              required
             />
           </div>
           <div className="space-y-2">
