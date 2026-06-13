@@ -5,6 +5,31 @@ import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
 
 const MAX_FAMILIES = 100;
 
+type FamilyRow = {
+  id: string;
+  name: string;
+  owner_user_id: string;
+  created_at: string;
+  updated_at: string | null;
+};
+
+type FamilyMembershipRow = {
+  role: string;
+  status: string;
+  families: FamilyRow | FamilyRow[] | null;
+};
+
+type FamilyMemberSummaryRow = {
+  family_id: string;
+  name: string;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+function getFamilyFromMembership(item: FamilyMembershipRow): FamilyRow | null {
+  return Array.isArray(item.families) ? (item.families[0] ?? null) : item.families;
+}
+
 export async function GET() {
   const user = await getRouteUser();
   if (user instanceof NextResponse) {
@@ -26,7 +51,47 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ families: data ?? [] });
+  const memberships = ((data ?? []) as FamilyMembershipRow[])
+    .map((item) => ({
+      ...item,
+      families: getFamilyFromMembership(item),
+    }))
+    .filter((item): item is FamilyMembershipRow & { families: FamilyRow } => Boolean(item.families));
+
+  const familyIds = memberships.map((item) => item.families.id);
+  if (familyIds.length === 0) {
+    return NextResponse.json({ families: [] });
+  }
+
+  const { data: familyMembers, error: familyMembersError } = await admin
+    .from("elders")
+    .select("family_id,name,created_at,updated_at")
+    .in("family_id", familyIds)
+    .order("updated_at", { ascending: false });
+
+  if (familyMembersError) {
+    return NextResponse.json({ error: familyMembersError.message }, { status: 500 });
+  }
+
+  const memberCounts = new Map<string, number>();
+  const latestMemberByFamily = new Map<string, FamilyMemberSummaryRow>();
+  for (const member of (familyMembers ?? []) as FamilyMemberSummaryRow[]) {
+    memberCounts.set(member.family_id, (memberCounts.get(member.family_id) ?? 0) + 1);
+    const current = latestMemberByFamily.get(member.family_id);
+    const currentTime = current?.updated_at ?? current?.created_at ?? "";
+    const memberTime = member.updated_at ?? member.created_at ?? "";
+    if (!current || memberTime > currentTime) {
+      latestMemberByFamily.set(member.family_id, member);
+    }
+  }
+
+  return NextResponse.json({
+    families: memberships.map((item) => ({
+      ...item,
+      familyMemberCount: memberCounts.get(item.families.id) ?? 0,
+      latestMemberUpdate: latestMemberByFamily.get(item.families.id) ?? null,
+    })),
+  });
 }
 
 export async function POST(request: NextRequest) {
