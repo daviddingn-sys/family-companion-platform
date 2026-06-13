@@ -50,8 +50,8 @@ export function EldersClient({ familyId }: { familyId: string }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">老人档案</h1>
-          <p className="text-sm text-muted-foreground">后续血压、用药、提醒和报告都会关联到具体老人。</p>
+          <h1 className="text-2xl font-semibold">健康档案</h1>
+          <p className="text-sm text-muted-foreground">给每位家庭成员建立专属健康档案，血压、用药、提醒和报告都会归属到具体成员。</p>
         </div>
         <Button asChild>
           <Link href={`/families/${familyId}/elders/new`}>
@@ -67,9 +67,9 @@ export function EldersClient({ familyId }: { familyId: string }) {
       ) : elders.length === 0 ? (
         <Card>
           <CardContent className="py-8">
-            <p className="mb-4 text-sm text-muted-foreground">还没有老人档案。</p>
+            <p className="mb-4 text-sm text-muted-foreground">还没有健康档案。</p>
             <Button asChild>
-              <Link href={`/families/${familyId}/elders/new`}>新增老人档案</Link>
+              <Link href={`/families/${familyId}/elders/new`}>新增健康档案</Link>
             </Button>
           </CardContent>
         </Card>
