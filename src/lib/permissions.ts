@@ -49,7 +49,7 @@ export async function ensureProfile(user: User) {
     display_name:
       user.user_metadata?.display_name ??
       user.phone ??
-      "家庭成员",
+      "协作成员",
     phone: user.phone ?? user.user_metadata?.phone ?? null,
     avatar_url: user.user_metadata?.avatar_url ?? null,
     updated_at: new Date().toISOString(),
@@ -172,13 +172,13 @@ export async function requireElderInFamily(familyId: string, elderId: string) {
     elder = await getElderInFamily(familyId, elderId);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "老人档案校验失败" },
+      { error: error instanceof Error ? error.message : "健康档案校验失败" },
       { status: 500 },
     );
   }
 
   if (!elder) {
-    return NextResponse.json({ error: "老人档案不存在" }, { status: 404 });
+    return NextResponse.json({ error: "健康档案不存在" }, { status: 404 });
   }
 
   return elder;
