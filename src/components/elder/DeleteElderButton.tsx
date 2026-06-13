@@ -17,7 +17,7 @@ export function DeleteElderButton({
   const [loading, setLoading] = useState(false);
 
   async function remove() {
-    if (!window.confirm("删除老人档案会同时删除关联的健康数据，确定继续吗？")) {
+    if (!window.confirm("删除健康档案会同时删除关联的健康数据，确定继续吗？")) {
       return;
     }
 
