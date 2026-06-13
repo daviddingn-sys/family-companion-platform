@@ -106,6 +106,12 @@ export default async function ElderPage({
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           <Button asChild variant="outline">
+            <Link href={`/families/${familyId}`}>返回家庭</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/families/${familyId}/elders/new`}>新增家庭成员</Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link href={`/families/${familyId}/elders/${elderId}/blood-pressure`}>血压记录</Link>
           </Button>
           <Button asChild variant="outline">
