@@ -17,7 +17,7 @@ export function DeleteElderButton({
   const [loading, setLoading] = useState(false);
 
   async function remove() {
-    if (!window.confirm("删除健康档案会同时删除关联的健康数据，确定继续吗？")) {
+    if (!window.confirm("删除家庭成员会同时删除该成员的健康档案和关联健康数据，确定继续吗？")) {
       return;
     }
 
@@ -41,7 +41,7 @@ export function DeleteElderButton({
   return (
     <div className="space-y-2">
       <Button variant="destructive" onClick={remove} disabled={loading}>
-        {loading ? "删除中..." : "删除档案"}
+        {loading ? "删除中..." : "删除家庭成员"}
       </Button>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
