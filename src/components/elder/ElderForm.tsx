@@ -29,6 +29,8 @@ type ElderResponse = {
   };
 };
 
+type SubmitAction = "view" | "continue" | "return";
+
 export function ElderForm({
   familyId,
   elder,
@@ -49,27 +51,58 @@ export function ElderForm({
     medicalNotes: elder?.medical_notes ?? "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loadingAction, setLoadingAction] = useState<SubmitAction | "">("");
+  const isEditing = Boolean(elder?.id);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const action = (submitter?.value as SubmitAction | undefined) ?? "view";
+    setLoadingAction(action);
     setError("");
+    setMessage("");
+
+    const endpoint =
+      isEditing && elder?.id
+        ? `/api/families/${familyId}/elders/${elder.id}`
+        : `/api/families/${familyId}/elders`;
 
     const result = await requestJson<ElderResponse>(
-      elder?.id
-        ? `/api/families/${familyId}/elders/${elder.id}`
-        : `/api/families/${familyId}/elders`,
+      endpoint,
       {
-        method: elder?.id ? "PATCH" : "POST",
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       },
     );
-    setLoading(false);
+    setLoadingAction("");
 
     if (!result.ok) {
       setError(result.error);
+      return;
+    }
+
+    if (!isEditing && action === "continue") {
+      setForm({
+        name: "",
+        relationship: "",
+        gender: "unknown",
+        birthDate: "",
+        phone: "",
+        emergencyContactName: "",
+        emergencyContactPhone: "",
+        address: "",
+        medicalNotes: "",
+      });
+      setMessage("已保存，可以继续新增下一位家庭成员。");
+      router.refresh();
+      return;
+    }
+
+    if (action === "return") {
+      router.push(`/families/${familyId}`);
+      router.refresh();
       return;
     }
 
@@ -159,9 +192,20 @@ export function ElderForm({
             />
           </div>
           {error && <p className="text-sm text-destructive md:col-span-2">{error}</p>}
-          <Button className="md:col-span-2" type="submit" disabled={loading}>
-            {loading ? "保存中..." : "保存档案"}
-          </Button>
+          {message && <p className="text-sm text-muted-foreground md:col-span-2">{message}</p>}
+          <div className="flex flex-wrap gap-2 md:col-span-2">
+            <Button type="submit" name="action" value="view" disabled={Boolean(loadingAction)}>
+              {loadingAction === "view" ? "保存中..." : "保存并查看档案"}
+            </Button>
+            {!isEditing && (
+              <Button type="submit" name="action" value="continue" variant="outline" disabled={Boolean(loadingAction)}>
+                {loadingAction === "continue" ? "保存中..." : "保存并继续新增"}
+              </Button>
+            )}
+            <Button type="submit" name="action" value="return" variant="outline" disabled={Boolean(loadingAction)}>
+              {loadingAction === "return" ? "保存中..." : "保存并返回家庭"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
