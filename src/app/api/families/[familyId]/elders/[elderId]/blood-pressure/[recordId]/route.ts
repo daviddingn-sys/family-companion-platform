@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncBloodPressureAbnormalEvent } from "@/lib/abnormal-events";
+import { writeOperationLog } from "@/lib/operation-logs";
 import { getRouteUser, requireElderInFamily, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isNoRowsError } from "@/lib/supabase/errors";
@@ -87,7 +88,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ familyId: string; elderId: string; recordId: string }> },
 ) {
   const { familyId, elderId, recordId } = await params;
@@ -123,5 +124,20 @@ export async function DELETE(
 
   if (isNoRowsError(error)) return NextResponse.json({ error: "血压记录不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await writeOperationLog({
+    actorUserId: user.id,
+    familyId,
+    elderId,
+    action: "delete",
+    resourceType: "blood_pressure_record",
+    resourceId: recordId,
+    source: "web",
+    request,
+    metadata: {
+      deletedAbnormalEvents: true,
+    },
+  });
+
   return NextResponse.json({ ok: true });
 }
