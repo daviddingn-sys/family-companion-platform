@@ -9,7 +9,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 const navItems = [
   { href: "/dashboard", label: "工作台", icon: Home },
   { href: "/families", label: "家庭", icon: Users },
-  { href: "/invitations", label: "邀请", icon: UserPlus },
+  { href: "/invitations", label: "协作邀请", icon: UserPlus },
   { href: "/profile", label: "个人资料", icon: User },
 ];
 
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="mt-4 rounded-md border bg-card p-3 text-xs text-muted-foreground">
               <UserRoundCog className="mb-2 size-4 text-primary" />
-              当前聚焦家庭档案、健康数据和基础报告。
+              当前聚焦家庭、健康档案、健康数据和基础报告。
             </div>
           </nav>
         </aside>
