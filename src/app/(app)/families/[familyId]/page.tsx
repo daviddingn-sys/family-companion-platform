@@ -151,7 +151,7 @@ export default async function FamilyPage({
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button asChild size="sm">
-                        <Link href={`/families/${familyId}/elders/${member.id}`}>查看健康档案</Link>
+                        <Link href={`/families/${familyId}/elders/${member.id}`}>查看成员档案</Link>
                       </Button>
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/families/${familyId}/elders/${member.id}/blood-pressure`}>健康数据</Link>
