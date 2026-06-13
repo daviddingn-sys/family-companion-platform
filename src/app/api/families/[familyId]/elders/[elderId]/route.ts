@@ -50,6 +50,7 @@ export async function PATCH(
     .from("elders")
     .update({
       name: parsed.data.name,
+      relationship: parsed.data.relationship || null,
       gender: parsed.data.gender,
       birth_date: parsed.data.birthDate || null,
       phone: parsed.data.phone || null,
