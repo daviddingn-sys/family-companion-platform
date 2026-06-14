@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { HeartPulse, Home, LogOut, User, UserPlus, Users, UserRoundCog } from "lucide-react";
+import { FileText, HeartPulse, Home, LogOut, User, UserPlus, Users, UserRoundCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -65,6 +65,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mt-4 rounded-md border bg-card p-3 text-xs text-muted-foreground">
               <UserRoundCog className="mb-2 size-4 text-primary" />
               当前聚焦家庭成员、健康数据和基础报告。
+            </div>
+            <div className="rounded-md border bg-card p-3 text-xs">
+              <FileText className="mb-2 size-4 text-primary" />
+              <div className="grid gap-1">
+                <Link className="text-muted-foreground hover:text-foreground" href="/legal/privacy-policy">
+                  隐私政策
+                </Link>
+                <Link className="text-muted-foreground hover:text-foreground" href="/legal/disclaimer">
+                  非医疗诊断免责声明
+                </Link>
+                <Link className="text-muted-foreground hover:text-foreground" href="/legal/data-deletion">
+                  数据删除说明
+                </Link>
+              </div>
             </div>
           </nav>
         </aside>
