@@ -127,6 +127,13 @@
       "when": 1781460000000,
       "tag": "0017_add_data_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781463600000,
+      "tag": "0018_add_legacy_migration_foundation",
+      "breakpoints": true
     }
   ]
 }
