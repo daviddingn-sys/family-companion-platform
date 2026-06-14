@@ -9,6 +9,7 @@ export const optionalEnvKeys = [
   "COZE_WORKLOAD_IDENTITY_API_KEY",
   "WECHAT_MINIPROGRAM_APPID",
   "WECHAT_MINIPROGRAM_SECRET",
+  "WECHAT_MINIPROGRAM_SESSION_SECRET",
 ] as const;
 export const publicSupabaseEnvKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",
