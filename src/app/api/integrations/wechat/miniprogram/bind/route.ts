@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { writeOperationLog } from "@/lib/operation-logs";
 import { ensureRouteProfile, getRouteUser } from "@/lib/permissions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
@@ -12,6 +13,33 @@ const bindWechatSchema = z.object({
   nickname: z.string().max(80).optional(),
   avatarUrl: z.string().url().optional(),
 });
+
+export async function GET() {
+  const user = await getRouteUser();
+  if (user instanceof NextResponse) return user;
+
+  const admin = createSupabaseAdminClient();
+  const appid = process.env.WECHAT_MINIPROGRAM_APPID;
+  let query = admin
+    .from("wechat_identities")
+    .select("id,appid,openid,unionid,nickname,avatar_url,last_login_at,created_at,updated_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (appid) {
+    query = query.eq("appid", appid);
+  }
+
+  const { data, error } = await query;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({
+    identities: (data ?? []).map((identity) => ({
+      ...identity,
+      openid: `${identity.openid.slice(0, 6)}...${identity.openid.slice(-4)}`,
+    })),
+  });
+}
 
 export async function POST(request: NextRequest) {
   const missing = getMissingWechatMiniprogramEnvKeys();
@@ -88,4 +116,47 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ identity: data });
+}
+
+export async function DELETE(request: NextRequest) {
+  const user = await getRouteUser();
+  if (user instanceof NextResponse) return user;
+
+  const appid = process.env.WECHAT_MINIPROGRAM_APPID;
+  if (!appid) {
+    return NextResponse.json(
+      {
+        error: "微信小程序配置尚未完成。",
+        status: "missing_wechat_miniprogram_env",
+        missingRequiredEnv: ["WECHAT_MINIPROGRAM_APPID"],
+      },
+      { status: 503 },
+    );
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("wechat_identities")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("appid", appid)
+    .select("id,openid")
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "未找到已绑定的微信身份。" }, { status: 404 });
+
+  await writeOperationLog({
+    actorUserId: user.id,
+    action: "unbind",
+    resourceType: "wechat_identity",
+    resourceId: data.id,
+    source: "web",
+    request,
+    metadata: {
+      openidPrefix: data.openid.slice(0, 6),
+    },
+  });
+
+  return NextResponse.json({ ok: true });
 }
