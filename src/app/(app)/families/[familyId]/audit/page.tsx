@@ -63,7 +63,7 @@ export default async function FamilyAuditPage({
     );
   }
 
-  const [requestsResult, logsResult] = await Promise.all([
+  const [requestsResult, logsResult, migrationBatchesResult, migrationLogsResult] = await Promise.all([
     admin
       .from("data_requests")
       .select("id,user_id,request_type,status,source,note,created_at,updated_at")
@@ -76,13 +76,29 @@ export default async function FamilyAuditPage({
       .eq("family_id", familyId)
       .order("created_at", { ascending: false })
       .limit(100),
+    admin
+      .from("data_migration_batches")
+      .select("id,legacy_source,legacy_user_key,status,summary,note,started_at,completed_at,created_at")
+      .eq("family_id", familyId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("data_migration_logs")
+      .select("id,legacy_source,legacy_record_type,legacy_record_id,target_resource_type,target_resource_id,status,message,created_at")
+      .eq("family_id", familyId)
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
   if (requestsResult.error) throw requestsResult.error;
   if (logsResult.error) throw logsResult.error;
+  if (migrationBatchesResult.error) throw migrationBatchesResult.error;
+  if (migrationLogsResult.error) throw migrationLogsResult.error;
 
   const requests = requestsResult.data ?? [];
   const logs = logsResult.data ?? [];
+  const migrationBatches = migrationBatchesResult.data ?? [];
+  const migrationLogs = migrationLogsResult.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -139,6 +155,61 @@ export default async function FamilyAuditPage({
                   <span className="text-muted-foreground">
                     {item.source} · {formatTime(item.created_at)}
                   </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="text-base">数据迁移批次</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {migrationBatches.length === 0 ? (
+            <p className="text-sm text-muted-foreground">暂无迁移批次。小程序独立运营阶段不会产生迁移记录。</p>
+          ) : (
+            <div className="grid gap-2">
+              {migrationBatches.map((item) => (
+                <div key={item.id} className="rounded-md border p-3 text-sm">
+                  <p className="font-medium">
+                    {item.legacy_source} · {item.status}
+                  </p>
+                  <p className="text-muted-foreground">
+                    旧用户：{item.legacy_user_key} · {formatTime(item.created_at)}
+                  </p>
+                  {item.note && <p className="mt-1">{item.note}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="text-base">迁移明细</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {migrationLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">暂无迁移明细。</p>
+          ) : (
+            <div className="grid gap-2">
+              {migrationLogs.map((item) => (
+                <div key={item.id} className="rounded-md border p-3 text-sm">
+                  <p className="font-medium">
+                    {item.legacy_record_type} · {item.status}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {item.legacy_source} · {item.legacy_record_id} · {formatTime(item.created_at)}
+                  </p>
+                  {item.target_resource_type && (
+                    <p className="text-muted-foreground">
+                      目标：{item.target_resource_type} · {item.target_resource_id?.slice(0, 8)}
+                    </p>
+                  )}
+                  {item.message && <p className="mt-1">{item.message}</p>}
                 </div>
               ))}
             </div>
