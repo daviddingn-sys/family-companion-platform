@@ -147,6 +147,19 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </Button>
           </form>
           <p className="mt-3 text-center text-xs text-muted-foreground">当前阶段暂不提供自助找回密码，需要由管理员重置。</p>
+          {!isLogin && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              注册即表示同意
+              <Link className="mx-1 text-primary underline-offset-4 hover:underline" href="/legal/user-agreement">
+                用户协议
+              </Link>
+              和
+              <Link className="mx-1 text-primary underline-offset-4 hover:underline" href="/legal/privacy-policy">
+                隐私政策
+              </Link>
+              。
+            </p>
+          )}
           <p className="mt-4 text-center text-sm text-muted-foreground">
             {isLogin ? "还没有账户？" : "已有账户？"}
             <Link
