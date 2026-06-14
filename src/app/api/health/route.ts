@@ -19,6 +19,8 @@ const requiredTables = [
   "health_reports",
   "operation_logs",
   "data_requests",
+  "data_migration_batches",
+  "data_migration_logs",
 ];
 
 async function queryDatabaseCatalog<T extends QueryResultRow>(query: string, values: string[]) {
