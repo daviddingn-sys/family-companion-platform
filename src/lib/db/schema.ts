@@ -165,6 +165,63 @@ export const dataRequests = pgTable(
   ],
 );
 
+export const dataMigrationBatches = pgTable(
+  "data_migration_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id").references(() => families.id, {
+      onDelete: "set null",
+    }),
+    initiatedBy: uuid("initiated_by").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    legacySource: text("legacy_source").notNull(),
+    legacyUserKey: text("legacy_user_key").notNull(),
+    status: text("status").notNull().default("pending"),
+    summary: jsonb("summary"),
+    note: text("note"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("data_migration_batches_family_created_at_idx").on(table.familyId, table.createdAt),
+    index("data_migration_batches_legacy_user_idx").on(table.legacySource, table.legacyUserKey),
+    index("data_migration_batches_status_idx").on(table.status),
+  ],
+);
+
+export const dataMigrationLogs = pgTable(
+  "data_migration_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    batchId: uuid("batch_id").notNull().references(() => dataMigrationBatches.id, {
+      onDelete: "cascade",
+    }),
+    familyId: uuid("family_id").references(() => families.id, {
+      onDelete: "set null",
+    }),
+    elderId: uuid("elder_id").references(() => elders.id, {
+      onDelete: "set null",
+    }),
+    legacySource: text("legacy_source").notNull(),
+    legacyRecordType: text("legacy_record_type").notNull(),
+    legacyRecordId: text("legacy_record_id").notNull(),
+    targetResourceType: text("target_resource_type"),
+    targetResourceId: text("target_resource_id"),
+    status: text("status").notNull().default("pending"),
+    message: text("message"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("data_migration_logs_batch_idx").on(table.batchId),
+    index("data_migration_logs_legacy_record_idx").on(table.legacySource, table.legacyRecordType, table.legacyRecordId),
+    index("data_migration_logs_family_created_at_idx").on(table.familyId, table.createdAt),
+  ],
+);
+
 export const bloodPressureRecords = pgTable(
   "blood_pressure_records",
   {
@@ -184,6 +241,12 @@ export const bloodPressureRecords = pgTable(
     imageKey: text("image_key"),
     source: text("source").notNull().default("web"),
     status: text("status").notNull().default("confirmed"),
+    legacySource: text("legacy_source"),
+    legacyUserKey: text("legacy_user_key"),
+    legacyRecordId: text("legacy_record_id"),
+    migrationBatchId: uuid("migration_batch_id").references(() => dataMigrationBatches.id, {
+      onDelete: "set null",
+    }),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -193,6 +256,7 @@ export const bloodPressureRecords = pgTable(
     index("bp_records_elder_id_idx").on(table.elderId),
     index("bp_records_measured_at_idx").on(table.measuredAt),
     index("bp_records_elder_measured_at_idx").on(table.elderId, table.measuredAt),
+    index("bp_records_legacy_record_idx").on(table.legacySource, table.legacyRecordId),
   ],
 );
 
@@ -213,6 +277,12 @@ export const medications = pgTable(
     startDate: date("start_date"),
     endDate: date("end_date"),
     status: text("status").notNull().default("active"),
+    legacySource: text("legacy_source"),
+    legacyUserKey: text("legacy_user_key"),
+    legacyRecordId: text("legacy_record_id"),
+    migrationBatchId: uuid("migration_batch_id").references(() => dataMigrationBatches.id, {
+      onDelete: "set null",
+    }),
     note: text("note"),
     createdBy: uuid("created_by").notNull().references(() => profiles.id),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -222,6 +292,7 @@ export const medications = pgTable(
     index("medications_family_id_idx").on(table.familyId),
     index("medications_elder_id_idx").on(table.elderId),
     index("medications_status_idx").on(table.status),
+    index("medications_legacy_record_idx").on(table.legacySource, table.legacyRecordId),
   ],
 );
 
@@ -240,6 +311,12 @@ export const reminders = pgTable(
     dueAt: timestamp("due_at", { withTimezone: true }),
     repeatRule: text("repeat_rule"),
     status: text("status").notNull().default("active"),
+    legacySource: text("legacy_source"),
+    legacyUserKey: text("legacy_user_key"),
+    legacyRecordId: text("legacy_record_id"),
+    migrationBatchId: uuid("migration_batch_id").references(() => dataMigrationBatches.id, {
+      onDelete: "set null",
+    }),
     note: text("note"),
     createdBy: uuid("created_by").notNull().references(() => profiles.id),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -250,6 +327,7 @@ export const reminders = pgTable(
     index("reminders_elder_id_idx").on(table.elderId),
     index("reminders_due_at_idx").on(table.dueAt),
     index("reminders_status_idx").on(table.status),
+    index("reminders_legacy_record_idx").on(table.legacySource, table.legacyRecordId),
   ],
 );
 
@@ -269,6 +347,12 @@ export const abnormalEvents = pgTable(
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
     status: text("status").notNull().default("open"),
     description: text("description"),
+    legacySource: text("legacy_source"),
+    legacyUserKey: text("legacy_user_key"),
+    legacyRecordId: text("legacy_record_id"),
+    migrationBatchId: uuid("migration_batch_id").references(() => dataMigrationBatches.id, {
+      onDelete: "set null",
+    }),
     relatedBloodPressureRecordId: uuid("related_blood_pressure_record_id").references(
       () => bloodPressureRecords.id,
       { onDelete: "set null" },
@@ -283,6 +367,7 @@ export const abnormalEvents = pgTable(
     index("abnormal_events_occurred_at_idx").on(table.occurredAt),
     index("abnormal_events_status_idx").on(table.status),
     index("abnormal_events_severity_idx").on(table.severity),
+    index("abnormal_events_legacy_record_idx").on(table.legacySource, table.legacyRecordId),
   ],
 );
 
@@ -302,6 +387,12 @@ export const healthReports = pgTable(
     title: text("title").notNull(),
     summary: text("summary").notNull(),
     stats: jsonb("stats").notNull(),
+    legacySource: text("legacy_source"),
+    legacyUserKey: text("legacy_user_key"),
+    legacyRecordId: text("legacy_record_id"),
+    migrationBatchId: uuid("migration_batch_id").references(() => dataMigrationBatches.id, {
+      onDelete: "set null",
+    }),
     generatedBy: uuid("generated_by").notNull().references(() => profiles.id),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -309,6 +400,7 @@ export const healthReports = pgTable(
   (table) => [
     index("health_reports_family_id_idx").on(table.familyId),
     index("health_reports_elder_id_idx").on(table.elderId),
+    index("health_reports_legacy_record_idx").on(table.legacySource, table.legacyRecordId),
     uniqueIndex("health_reports_unique_period").on(
       table.familyId,
       table.elderId,
