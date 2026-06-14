@@ -1,3 +1,4 @@
+import { DataControls } from "@/components/profile/DataControls";
 import { PasswordForm } from "@/components/profile/PasswordForm";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { requireUser } from "@/lib/auth";
@@ -19,6 +20,23 @@ export default async function ProfilePage() {
       .eq("id", user.id)
       .single(),
   );
+  const [dataRequestsResult, operationLogsResult] = await Promise.all([
+    admin
+      .from("data_requests")
+      .select("id,request_type,status,source,note,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    admin
+      .from("operation_logs")
+      .select("id,action,resource_type,source,created_at")
+      .eq("actor_user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  if (dataRequestsResult.error) throw dataRequestsResult.error;
+  if (operationLogsResult.error) throw operationLogsResult.error;
 
   return (
     <div className="space-y-4">
@@ -28,6 +46,10 @@ export default async function ProfilePage() {
       </div>
       <ProfileForm profile={profile} />
       <PasswordForm />
+      <DataControls
+        dataRequests={dataRequestsResult.data ?? []}
+        operationLogs={operationLogsResult.data ?? []}
+      />
     </div>
   );
 }
