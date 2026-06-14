@@ -140,6 +140,31 @@ export const operationLogs = pgTable(
   ],
 );
 
+export const dataRequests = pgTable(
+  "data_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull().references(() => profiles.id, {
+      onDelete: "cascade",
+    }),
+    familyId: uuid("family_id").references(() => families.id, {
+      onDelete: "set null",
+    }),
+    requestType: text("request_type").notNull(),
+    status: text("status").notNull().default("submitted"),
+    source: text("source").notNull().default("web"),
+    note: text("note"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("data_requests_user_created_at_idx").on(table.userId, table.createdAt),
+    index("data_requests_family_created_at_idx").on(table.familyId, table.createdAt),
+    index("data_requests_status_idx").on(table.status),
+  ],
+);
+
 export const bloodPressureRecords = pgTable(
   "blood_pressure_records",
   {
