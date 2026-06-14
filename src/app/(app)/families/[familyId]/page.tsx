@@ -105,9 +105,16 @@ export default async function FamilyPage({
           <h1 className="text-2xl font-semibold">{family.name}</h1>
           <p className="text-sm text-muted-foreground">你的角色：{roleLabels[membership.role] ?? membership.role}</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={`/families/${familyId}/settings`}>家庭设置</Link>
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          {(membership.role === "owner" || membership.role === "admin") && (
+            <Button asChild variant="outline">
+              <Link href={`/families/${familyId}/audit`}>家庭审计</Link>
+            </Button>
+          )}
+          <Button asChild variant="outline">
+            <Link href={`/families/${familyId}/settings`}>家庭设置</Link>
+          </Button>
+        </div>
       </div>
       <Card className="rounded-lg">
         <CardHeader>
