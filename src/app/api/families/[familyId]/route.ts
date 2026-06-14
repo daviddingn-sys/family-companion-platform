@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { writeOperationLog } from "@/lib/operation-logs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isNoRowsError } from "@/lib/supabase/errors";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
@@ -74,6 +75,19 @@ export async function DELETE(
   }
 
   const admin = createSupabaseAdminClient();
+  await writeOperationLog({
+    actorUserId: user.id,
+    familyId,
+    action: "delete",
+    resourceType: "family",
+    resourceId: familyId,
+    source: "web",
+    request,
+    metadata: {
+      confirmed: true,
+    },
+  });
+
   const { error } = await admin.from("families").delete().eq("id", familyId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
