@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { writeOperationLog } from "@/lib/operation-logs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isNoRowsError } from "@/lib/supabase/errors";
 import { getRouteUser, requireFamilyMember, requireFamilyRole } from "@/lib/permissions";
@@ -97,5 +98,20 @@ export async function DELETE(
 
   if (isNoRowsError(error)) return NextResponse.json({ error: "健康档案不存在" }, { status: 404 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await writeOperationLog({
+    actorUserId: user.id,
+    familyId,
+    elderId,
+    action: "delete",
+    resourceType: "family_member_health_profile",
+    resourceId: elderId,
+    source: "web",
+    request,
+    metadata: {
+      confirmed: true,
+    },
+  });
+
   return NextResponse.json({ ok: true });
 }
