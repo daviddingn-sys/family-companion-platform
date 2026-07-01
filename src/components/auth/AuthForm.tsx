@@ -24,6 +24,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const isLogin = mode === "login";
 
   function getAuthErrorMessage(message: string) {
+    if (/failed to fetch|fetch failed|networkerror/i.test(message)) {
+      return "无法连接账号服务，请检查 Supabase 项目 URL 是否有效，或稍后重试。";
+    }
     if (/invalid login credentials/i.test(message)) {
       return "手机号或密码不正确。";
     }
@@ -61,10 +64,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
 
     const supabase = createSupabaseBrowserClient();
-    const result = await supabase.auth.signInWithPassword({
-      email: phoneToAuthEmail(normalizedPhone),
-      password,
-    });
+    const result = await supabase.auth
+      .signInWithPassword({
+        email: phoneToAuthEmail(normalizedPhone),
+        password,
+      })
+      .catch((authError) => ({
+        data: { user: null, session: null },
+        error: authError instanceof Error ? authError : new Error("账号服务连接失败"),
+      }));
 
     if (!result.error && result.data.user && !isLogin) {
       await supabase.auth.updateUser({

@@ -21,40 +21,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "请输入有效的中国大陆手机号" }, { status: 400 });
   }
 
-  const admin = createSupabaseAdminClient();
   const email = phoneToAuthEmail(normalizedPhone);
   const displayName = parsed.data.displayName?.trim() || normalizedPhone;
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password: parsed.data.password,
-    email_confirm: true,
-    user_metadata: {
-      display_name: displayName,
-      phone: normalizedPhone,
-    },
-  });
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password: parsed.data.password,
+      email_confirm: true,
+      user_metadata: {
+        display_name: displayName,
+        phone: normalizedPhone,
+      },
+    });
 
-  if (error) {
-    if (/already|registered|exists|duplicate/i.test(error.message)) {
-      return NextResponse.json({ error: "该手机号已注册，请直接登录。" }, { status: 409 });
+    if (error) {
+      if (/already|registered|exists|duplicate/i.test(error.message)) {
+        return NextResponse.json({ error: "该手机号已注册，请直接登录。" }, { status: 409 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    const { error: profileError } = await admin.from("profiles").upsert(
+      {
+        id: data.user.id,
+        display_name: displayName,
+        phone: normalizedPhone,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    );
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "账号服务连接失败";
+    if (/failed to fetch|fetch failed|networkerror/i.test(message)) {
+      return NextResponse.json(
+        { error: "无法连接账号服务，请检查 Supabase 项目 URL 是否有效，或稍后重试。" },
+        { status: 503 },
+      );
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const { error: profileError } = await admin.from("profiles").upsert(
-    {
-      id: data.user.id,
-      display_name: displayName,
-      phone: normalizedPhone,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "id" },
-  );
-
-  if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true });
 }
